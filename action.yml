@@ -1,0 +1,13 @@
+name: 'Template Repo Sync'
+description: 'Action for taking the files in a template repo and synchronizing them to the repo via a PR'
+inputs:
+  who-to-greet:  # id of input
+    description: 'Who to greet'
+    required: true
+    default: 'World'
+outputs:
+  time: # id of output
+    description: 'The time we greeted you'
+runs:
+  using: 'node20'
+  main: 'index.js'

@@ -1,0 +1,22 @@
+{
+    "ignore": [
+        "src/!(templated).ts",
+        "custom-bin/**"
+    ],
+    "merge": {
+        ".json": {
+            "rules": [
+                {
+                    "glob": "package.json",
+                    "options": {
+                        "paths": [
+                            ["$.dependencies", "merge-template"],
+                            ["$.devDependencies", "merge-template"],
+                            ["$.engines", "merge-template"]
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

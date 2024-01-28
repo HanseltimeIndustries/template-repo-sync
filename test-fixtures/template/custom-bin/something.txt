@@ -1,0 +1,1 @@
+This is a file that is only meant for the base template maintainers
