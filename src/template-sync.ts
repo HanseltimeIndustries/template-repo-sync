@@ -12,7 +12,7 @@ import { Change } from 'diff'
  */
 type TemplateCloneDriverFn = (tmpDir: string, repoUrl: string) => Promise<string>
 
-interface TemplateSyncOptions {
+export interface TemplateSyncOptions {
     repoUrl: string
 
     /**
@@ -31,7 +31,7 @@ interface TemplateSyncOptions {
     cloneDriver?: TemplateCloneDriverFn
 }
 
-interface TemplateSyncReturn {
+export interface TemplateSyncReturn {
     /**
      * An array of files that were skipped outright due to a templatesync.local ignore glob
      */
@@ -47,8 +47,8 @@ interface TemplateSyncReturn {
     }
 }
 
-const TEMPLATE_SYNC_CONFIG = 'templatesync'
-const TEMPLATE_SYNC_LOCAL_CONFIG = 'templatesync.local'
+export const TEMPLATE_SYNC_CONFIG = 'templatesync'
+export const TEMPLATE_SYNC_LOCAL_CONFIG = 'templatesync.local'
 
 export async function templateSync(options: TemplateSyncOptions): Promise<TemplateSyncReturn> {
     
