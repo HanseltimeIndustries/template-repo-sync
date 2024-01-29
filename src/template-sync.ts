@@ -31,10 +31,26 @@ interface TemplateSyncOptions {
     cloneDriver?: TemplateCloneDriverFn
 }
 
+interface TemplateSyncReturn {
+    /**
+     * An array of files that were skipped outright due to a templatesync.local ignore glob
+     */
+    localSkipFiles: string[],
+    /**
+     * An object mapping all file paths to any merge rules that would've overridden the merge rules
+     * of the template sync file.
+     * 
+     * Note: right now, this shows non-changed diffs as well so you have to look for added or removed
+     */
+    localFileChanges: {
+        [filePath: string]: Change[]
+    }
+}
+
 const TEMPLATE_SYNC_CONFIG = 'templatesync'
 const TEMPLATE_SYNC_LOCAL_CONFIG = 'templatesync.local'
 
-export async function templateSync(options: TemplateSyncOptions) {
+export async function templateSync(options: TemplateSyncOptions): Promise<TemplateSyncReturn> {
     
     const cloneDriver = options.cloneDriver ?? gitClone
     const tempCloneDir = await cloneDriver(options.tmpCloneDir, options.repoUrl)
@@ -48,7 +64,9 @@ export async function templateSync(options: TemplateSyncOptions) {
 
     const filesToSync = getAllFilesInDir(tempCloneDir, templateSyncConfig.ignore)
     const localSkipFiles: string[] = []
-    const localFileChanges: Map<string, Change[]> = new Map()
+    const localFileChanges: {
+        [filePath: string]: Change[]
+    } = {}
 
     await Promise.all(filesToSync.map(async (f) => {
         const result = await mergeFile(f, {
@@ -60,7 +78,7 @@ export async function templateSync(options: TemplateSyncOptions) {
         if (result.ignoredDueToLocal) {
             localSkipFiles.push(f)
         } else if (result?.localChanges && result.localChanges.length > 0) {
-            localFileChanges.set(f, result.localChanges)
+            localFileChanges[f] = result.localChanges
         }
     }))
 
