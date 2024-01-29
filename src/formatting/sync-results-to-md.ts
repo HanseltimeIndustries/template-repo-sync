@@ -29,8 +29,8 @@ function makeChangeIntoDiffLines(change: Change, nonchangeMax = 3) {
 
     if (!operator && nonchangeMax > 0 && change.count && change.count > nonchangeMax) {
         const lines = change.value.split('\n')
-        lines.slice(lines.length - nonchangeMax)
-        return `${lines.join('\n')}\n`
+        const partial = lines.slice(lines.length - nonchangeMax)
+        return `...\n${partial.join('\n')}\n`
     }
 
     return change.value.split('\n').reduce((s, line) => {
