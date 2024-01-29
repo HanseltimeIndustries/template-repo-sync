@@ -76,8 +76,9 @@ export async function syncGithubRepo(options: GithubOptions) {
     }
 
     let configHash: string
-    if (existsSync(resolve(repoRoot, TEMPLATE_SYNC_LOCAL_CONFIG))) {
-        configHash = createHash('sha256').update(readFileSync(resolve(repoRoot, TEMPLATE_SYNC_LOCAL_CONFIG))).digest('hex').slice(0, 8)
+    const localConfigPath = resolve(repoRoot, `${TEMPLATE_SYNC_LOCAL_CONFIG}.json`)
+    if (existsSync(localConfigPath)) {
+        configHash = createHash('sha256').update(readFileSync(localConfigPath)).digest('hex').slice(0, 8)
     } else {
         configHash = 'noLocalConfig'
     }
