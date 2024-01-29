@@ -62,7 +62,7 @@ export async function templateSync(options: TemplateSyncOptions): Promise<Templa
     const localConfigPath = join(options.repoDir, `${TEMPLATE_SYNC_LOCAL_CONFIG}.json`)
     const localTemplateSyncConfig = existsSync(localConfigPath) ? JSON.parse(readFileSync(localConfigPath).toString()) : {} as Config
 
-    const filesToSync = getAllFilesInDir(tempCloneDir, templateSyncConfig.ignore)
+    const filesToSync = getAllFilesInDir(tempCloneDir, [...templateSyncConfig.ignore, '.git/**'])
     const localSkipFiles: string[] = []
     const localFileChanges: {
         [filePath: string]: Change[]
