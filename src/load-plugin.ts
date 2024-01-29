@@ -11,7 +11,12 @@ export async function loadPlugin<T>(mergeConfig: MergeConfig<T>, forExt: string,
         const localPath = resolve(configDir, mergeConfig.plugin)
         const importPath = existsSync(localPath) ? localPath : mergeConfig.plugin
         try {
-            handler = await import(importPath) as MergePlugin<any>
+            // Sad workaround for testing since dynamic import segfaults
+            if (process.env.JEST_WORKER_ID !== undefined) {
+                handler = require(importPath) as MergePlugin<any>
+            } else {
+                handler = await import(importPath) as MergePlugin<any>
+            }
             if (!handler.merge) {
                 handler = (handler as unknown as { default: MergePlugin<any> }).default
             }
