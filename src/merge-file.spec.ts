@@ -346,64 +346,63 @@ describe('mergeFile', () => {
             tested: true
         })
     })
-    // TODO: jest segfaults when attempting to resolve these
-    // fit('[inverse] applies default [.json] and custom merge for local with sync plugin and then local override', async () => {
-    //     expect(await mergeFile('package.json', {
-    //         cwd: tmpDir,
-    //         tempCloneDir: testTemplateDir,
-    //         localTemplateSyncConfig: {
-    //             ignore: [],
-    //             merge: {
-    //                 '.json': {
-    //                     // This is a relative path to ht
-    //                     plugin: 'plugins/custom-plugin.js',
-    //                     rules: [
-    //                         {
-    //                             glob: '**/package.json',
-    //                             options: {
-    //                                 paths: [
-    //                                     // Do not touch huh
-    //                                     ['$.dependencies.huh', 'merge-current']
-    //                                 ]
-    //                             }
-    //                         }
-    //                     ]
-    //                 }
-    //             }
-    //         },
-    //         templateSyncConfig: {
-    //             ignore: ['**/*.txt'],
-    //             merge: {
-    //                 '.json': {
-    //                     // no plugins
-    //                     rules: [
-    //                         {
-    //                             glob: '**/package.json',
-    //                             options: {
-    //                                 missingIsDelete: true,
-    //                                 paths: [
-    //                                     // Merge all template dependencies
-    //                                     ['$.dependencies', 'merge-template']
-    //                                 ]
-    //                             } as JsonFileMergeOptions,
-    //                         },
-    //                         {
-    //                             glob: '**/package.json',
-    //                             options: 'merge-current',
-    //                         },
-    //                     ]
-    //                 }
-    //             }
-    //         }
-    //     })).toEqual({
-    //         ignoredDueToLocal: false,
-    //         // We are just making sure plugin look up happens here
-    //         localChanges: expect.arrayContaining([])
-    //     })
+    it('[inverse] applies default [.json] and custom merge for local with sync plugin and then local override', async () => {
+        expect(await mergeFile('package.json', {
+            cwd: tmpDir,
+            tempCloneDir: testTemplateDir,
+            localTemplateSyncConfig: {
+                ignore: [],
+                merge: {
+                    '.json': {
+                        // This is a relative path to ht
+                        plugin: 'plugins/custom-plugin.js',
+                        rules: [
+                            {
+                                glob: '**/package.json',
+                                options: {
+                                    paths: [
+                                        // Do not touch huh
+                                        ['$.dependencies.huh', 'merge-current']
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            templateSyncConfig: {
+                ignore: ['**/*.txt'],
+                merge: {
+                    '.json': {
+                        // no plugins
+                        rules: [
+                            {
+                                glob: '**/package.json',
+                                options: {
+                                    missingIsDelete: true,
+                                    paths: [
+                                        // Merge all template dependencies
+                                        ['$.dependencies', 'merge-template']
+                                    ]
+                                } as JsonFileMergeOptions,
+                            },
+                            {
+                                glob: '**/package.json',
+                                options: 'merge-current',
+                            },
+                        ]
+                    }
+                }
+            }
+        })).toEqual({
+            ignoredDueToLocal: false,
+            // We are just making sure plugin look up happens here
+            localChanges: expect.arrayContaining([])
+        })
 
-    //     // Ensure we overwrote
-    //     expect(JSON.parse((await readFile(join(tmpDir, 'package.json'))).toString())).toEqual({
-    //         tested: true
-    //     })
-    // })
+        // Ensure we overwrote
+        expect(JSON.parse((await readFile(join(tmpDir, 'package.json'))).toString())).toEqual({
+            downstream: true
+        })
+    })
 })
