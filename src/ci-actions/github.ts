@@ -68,19 +68,24 @@ export async function syncGithubRepo(options: GithubOptions) {
 
     // Note, we use git here so that we can change this around for other git providers more easily
     const repoUrl = `https://github.com/${options.repoPath}`
-    const templateSha = execSync(`git ls-remote "${repoUrl}" "${options.templateBranch}"`).toString().split(' ')[0]
+    const shaLine = execSync(`git ls-remote "${repoUrl}" "${options.templateBranch}"`).toString().split(' ')[0]
+    const match = /^(?<hash>[^\s]+)\s/.exec(shaLine)
+    const templateSha = match?.groups?.hash
+    if (!templateSha) {
+        throw new Error(`Could not get the current sha of ${repoUrl} for ${options.templateBranch}`)
+    }
 
     let configHash: string
     if (existsSync(resolve(repoRoot, TEMPLATE_SYNC_LOCAL_CONFIG))) {
-        configHash = createHash('sha256').update(readFileSync(resolve(repoRoot, TEMPLATE_SYNC_LOCAL_CONFIG))).digest('hex')
+        configHash = createHash('sha256').update(readFileSync(resolve(repoRoot, TEMPLATE_SYNC_LOCAL_CONFIG))).digest('hex').slice(0, 8)
     } else {
         configHash = 'noLocalConfig'
     }
 
-    const branchName = `${branchPrefix}${templateSha}-${configHash}`
+    const branchName = `${branchPrefix}${templateSha.slice(0, 8)}-${configHash}`
 
     // Check if the branch exists already and skip
-    const output = execSync(`git ls-remote --exit-code --heads origin "${branchName}"`).toString().trim()
+    const output = execSync(`git ls-remote --heads origin "${branchName}"`).toString().trim()
     // Non-empty output means the branch exists
     if (output) {
         core.warning(`The exact same combination of ${TEMPLATE_SYNC_LOCAL_CONFIG} and remote ${options.templateBranch} has been run before`)
