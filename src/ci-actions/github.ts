@@ -123,7 +123,6 @@ export async function syncGithubRepo(options: GithubOptions) {
     }
 
 
-
     await octokit.rest.pulls.create({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
