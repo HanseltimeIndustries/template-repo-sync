@@ -5,6 +5,7 @@ import { existsSync } from "fs"
 import { readFile, writeFile } from "fs/promises"
 import { loadPlugin } from "./load-plugin"
 import { Change, diffLines } from "diff"
+import { outputFile } from "fs-extra"
 
 interface MergeFileOptions {
     localTemplateSyncConfig: Config
@@ -99,7 +100,7 @@ export async function mergeFile(relPath: string, context: MergeFileOptions): Pro
         // Just perform simple overwrite
         fileContents = (await readFile(templatePath)).toString()
     }
-    await writeFile(filePath, fileContents)
+    await outputFile(filePath, fileContents)
     return {
         ignoredDueToLocal: false,
         localChanges,
