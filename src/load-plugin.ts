@@ -1,4 +1,3 @@
-import { exists } from "fs-extra"
 import { defaultExtensionMap } from "./plugins"
 import { MergeConfig, MergePlugin } from "./types"
 import { existsSync } from "fs"

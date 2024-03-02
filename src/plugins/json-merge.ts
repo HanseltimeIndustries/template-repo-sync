@@ -1,7 +1,8 @@
-import { MergeContext, JsonFileMergeOptions, JsonPathOverrides, BaseJsonMergeOptions } from "../types";
+import { MergeContext, JsonFileMergeOptions, JsonPathOverrides } from "../types";
 import lodashMerge from 'lodash.merge'
 import locashCloneDeep from 'lodash.clonedeep'
 import jp, { PathComponent } from 'jsonpath'
+import { inferJSONIndent } from "../formatting/infer-json-indent";
 
 function stringOptionError(value: string) {
     if (value === 'overwrite' || value === 'merge-template' || value === 'merge-current') {
@@ -128,7 +129,7 @@ export async function merge(current: string, fromTemplateRepo: string, context: 
         })
     }
 
-    return JSON.stringify(returnJson, null, 4)
+    return JSON.stringify(returnJson, null, inferJSONIndent(current))
 }
 
 /**

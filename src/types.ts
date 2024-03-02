@@ -3,7 +3,7 @@
  * 
  * overwrite - the template sync overwrites completely
  * merge-template - we merge template into the current json with overrides on matching values happening from the template
- * merge-current - we merge the current json into the tempalte json with overrides on matching values happening from the current json 
+ * merge-current - we merge the current json into the template json with overrides on matching values happening from the current json 
  */
 export type BaseJsonMergeOptions = 'overwrite' | 'merge-template' | 'merge-current'
 export interface JsonPathOverrides {
@@ -30,6 +30,9 @@ export type JsonFileMergeOptions = BaseJsonMergeOptions | JsonPathOverrides
 // Sum of all basic file merge options
 type MergePluginOptions = JsonFileMergeOptions
 
+/**
+ * Configuration object for a given file type merge configuration
+ */
 export interface MergeConfig<T> {
     /**
      * The node module, available on the calling node context, that you want to run.
@@ -42,6 +45,10 @@ export interface MergeConfig<T> {
     rules: {glob: string, options: MergePluginOptions | T}[]
 }
 
+
+/**
+ * The base shape of a template sync config file
+ */
 export interface Config<T = any> {
     ignore: string[],
     /**
@@ -52,6 +59,10 @@ export interface Config<T = any> {
     }
 }
 
+/**
+ * Information around the file we are trying to merge and that arguments for that merge
+ * from matching a merge configuration
+ */
 export interface MergeContext<PluginOptions = any> {
     relFilePath: string,
     /**
@@ -65,7 +76,6 @@ export interface MergeContext<PluginOptions = any> {
      * are done
      */
     isLocalOptions?: boolean
-
 }
 
 export interface MergePlugin<PluginOptions> {
