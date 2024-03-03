@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.0.0...v1.0.1) (2024-03-03)
+
+
+### Bug Fixes
+
+* adding despcription ([4ef4e57](https://github.com/HanseltimeIndustries/template-repo-sync/commit/4ef4e57ef824e19d363839482d6664b61b670804))
+
 # 1.0.0 (2024-03-03)
 
 
