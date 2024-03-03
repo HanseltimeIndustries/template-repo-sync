@@ -36,7 +36,7 @@ interface MergeFileReturn {
  */
 export async function mergeFile(relPath: string, context: MergeFileOptions): Promise<MergeFileReturn> {
     const { localTemplateSyncConfig, templateSyncConfig, tempCloneDir, cwd } = context
-    
+
     if (some(relPath, localTemplateSyncConfig.ignore)) {
         return {
             ignoredDueToLocal: true

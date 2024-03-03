@@ -47,9 +47,28 @@ export interface MergeConfig<T> {
 
 
 /**
- * The base shape of a template sync config file
+ * The shape of a template sync config file
  */
 export interface Config<T = unknown> {
+    ignore: string[],
+    /**
+     * If there is no merge config, then we will always just overwrite the file for the diff
+     */
+    merge?: {
+        [fileExt: string]: MergeConfig<T>
+    }
+}
+
+/**
+ * The shape of a local template sync config file that overrides the root template repo
+ */
+export interface LocalConfig<T = unknown> {
+    /**
+     * This is the ref that we compare against.  If empty, we use all files that have changed since the
+     * beginning of the template repo.
+     */
+    afterRef?: string
+
     ignore: string[],
     /**
      * If there is no merge config, then we will always just overwrite the file for the diff

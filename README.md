@@ -74,6 +74,23 @@ export interface Config {
         }
     }
 }
+```
+
+## From SHA/Tag directive
+
+One of the biggest pains of syncing templates is that you can end up seeing a change multiple times because your change has 
+purposefully desynchronized from the template.  For instance, let's say that you need to support a newer framework than
+the template you cloned from.  You have added a PR to the template to upgrade, but the template maintainers are worried about
+the effect of the change on all other template-based repos and are waiting.  In the meantime, you still want to get any new
+security patterns or boilerplate patterns for other tools.
+
+To solve this, rudimentarily, we allow the local template sync config to provide a `afterRef` option.  When provided, template sync
+will only apply changes that have occurred after the ref (tag or sha) in question in the git based repo.  This does not mean
+that you will never see changes to the files from the last sync (because if someone changed something in that same file, all of its changes will be copied over),
+but it does mean that you will only see the changes to files that are newer than the last time you looked at it.
+
+As always, you can remove the SHA/Tag from your local config and this will trigger a full sync in the event that you made the wrong
+assumption about merging templates correctly.
 
 
 

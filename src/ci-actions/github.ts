@@ -65,7 +65,6 @@ export async function syncGithubRepo(options: GithubOptions) {
     const branchPrefix = options.branchPrefix ?? DEFAULT_BRANCH_PREFIX
     const commitMsg = options.commitMsg ? options.commitMsg : DEFAULT_COMMIT_MSG
 
-
     // Note, we use git here so that we can change this around for other git providers more easily
     const repoUrl = `https://github.com/${options.repoPath}`
     const shaLine = execSync(`git ls-remote "${repoUrl}" "${options.templateBranch}"`).toString().split(' ')[0]
@@ -96,7 +95,6 @@ export async function syncGithubRepo(options: GithubOptions) {
 
     // Checkout the branch
     execSync(`git checkout -b ${branchName}`)
-
 
     // Clone and merge on this branch
     const tempAppDir = await mkdtemp(join(getTempDir(), 'template_sync_'))

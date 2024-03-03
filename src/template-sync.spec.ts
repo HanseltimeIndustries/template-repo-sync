@@ -88,8 +88,8 @@ describe('templateSync', () => {
         })
 
         // Expect the ignores to not be a problem
-        fileMatchDownstream(tmpDir, 'src/index.ts')
-        fileMatchDownstream(tmpDir, 'plugins/custom-plugin.js')
+        await fileMatchDownstream(tmpDir, 'src/index.ts')
+        await fileMatchDownstream(tmpDir, 'plugins/custom-plugin.js')
     })
     it('appropriately merges according to the templatesync config file and the local config in an existing repo', async () => {
         // Remove the local sync overrides
@@ -140,8 +140,42 @@ describe('templateSync', () => {
         })
 
         // Expect the ignores to not be a problem
-        fileMatchDownstream(tmpDir, 'src/index.ts')
-        fileMatchDownstream(tmpDir, 'plugins/custom-plugin.js')
+        await fileMatchDownstream(tmpDir, 'src/index.ts')
+        await fileMatchDownstream(tmpDir, 'plugins/custom-plugin.js')
+    })
+    it('appropriately merges according to the templatesync config file and the local config in an existing repo with afterRef', async () => {
+        // Remove the local sync overrides
+        await rm(join(tmpDir, 'templatesync.local.json'))
+
+        writeFileSync(join(tmpDir, 'templatesync.local.json'), JSON.stringify({
+            "afterRef": "dummySha",
+            "ignore": [
+                // We don't have a need for this in here, but it's an example of keeping things cleaner for our custom plugins
+                "plugins/**"
+            ],
+        }))
+
+        // We will only update the templated.ts
+        const mockDiffDriver = jest.fn().mockImplementation(async () =>  ['src/templated.ts'])
+        const result = await templateSync({
+            tmpCloneDir: 'stubbed-by-driver',
+            cloneDriver: dummyCloneDriver,
+            repoUrl: 'not-important',
+            repoDir: tmpDir,
+            diffDriver: mockDiffDriver,
+        })
+
+        // since there was no override for this file, not changes from the local file
+        expect(result.localFileChanges).toEqual(expect.objectContaining({}))
+
+        // Verify the files
+        await fileMatchTemplate(tmpDir, 'templatesync.json')
+        await fileMatchTemplate(tmpDir, 'src/templated.ts')
+
+        // Expect the none of the diff files to work
+        await fileMatchDownstream(tmpDir, 'src/index.ts')
+        await fileMatchDownstream(tmpDir, 'plugins/custom-plugin.js')
+        await fileMatchDownstream(tmpDir, 'package.json')
     })
 })
 
