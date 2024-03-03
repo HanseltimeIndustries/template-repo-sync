@@ -1,7 +1,7 @@
 {
   "name": "@hanseltime/template-repo-sync",
   "version": "1.0.0",
-  "description": "",
+  "description": "An npm library that enables pluggable, customizable synchronization between template repos",
   "main": "lib/cjs/index.js",
   "types": "lib/cjs/index.d.ts",
   "module": "lib/esm/index.js",
