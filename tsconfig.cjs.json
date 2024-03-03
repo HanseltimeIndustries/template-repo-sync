@@ -1,0 +1,12 @@
+// Overrides for building to cjs
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig to read more about this file */
+
+    "module": "CommonJS",                                /* Specify what module code is generated. */
+    "outDir": "./lib/cjs",
+    "moduleResolution": "Node",
+    "declaration": true
+  },
+}

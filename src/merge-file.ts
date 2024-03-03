@@ -52,7 +52,7 @@ export async function mergeFile(relPath: string, context: MergeFileOptions): Pro
 
     // Either write the merge or write
     let fileContents: string
-    const localChanges = []
+    const localChanges: Change[] = []
     if (existsSync(filePath) && (mergeConfig || localMergeConfig)) {
         const originalCurrentFile = (await readFile(filePath)).toString()
         if (mergeConfig) {
