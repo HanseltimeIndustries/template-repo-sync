@@ -110,7 +110,7 @@ export async function syncGithubRepo(options: GithubOptions) {
 
     // commit everything
     execSync('git add .')
-    execSync(`git commit -m "${DEFAULT_COMMIT_MSG}"`)
+    execSync(`git commit -m "${commitMsg}"`)
     execSync(`git push --set-upstream origin "${branchName}"`)
 
     let prToBranch = options.prToBranch

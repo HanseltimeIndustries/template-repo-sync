@@ -1,6 +1,5 @@
-import { lstatSync, readdirSync } from "fs"
-import { readdir } from "fs/promises"
-import { isMatch, all, some } from "micromatch"
+import { readdirSync } from "fs"
+import { some } from "micromatch"
 import { join } from "path"
 
 export function invertMatchPatterns(patterns: string[]) {

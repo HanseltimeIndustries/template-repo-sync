@@ -11,7 +11,7 @@ function stringOptionError(value: string) {
     return `${value} must be one of type overwrite, merge-template, or merge-current`
 }
 
-export function validate(options: any) {
+export function validate(options: unknown) {
     const errors: string[] = []
 
     // check for flat options
@@ -26,6 +26,11 @@ export function validate(options: any) {
             errors.push(`Options must be an object and not ${typeof options}`)
             return errors
         }
+
+        if (Array.isArray(options)) {
+            errors.push(`Options must be an object and not Array`)
+            return errors
+        }
     
         if (options === null) {
             errors.push('Options cannot be null')
@@ -33,19 +38,28 @@ export function validate(options: any) {
         }
     }
 
-    Object.keys(options as JsonFileMergeOptions).forEach((k) => {
-        if (k.startsWith('$.')) {
-            try {
-                jp.parse(k)
-            } catch (err) {
-                errors.push(`Invalid jsonpath key: ${err}`)
-                return
-            }
-            const errMsg = stringOptionError(options[k])
-            if (errMsg) {
-                errors.push(`jsonpath ${k}: ${errMsg}`)
-            }
-        } else {
+    const optionsCast = options as JsonPathOverrides
+    const optionKeys = Object.keys(optionsCast) as unknown as (keyof JsonPathOverrides)[]
+    optionKeys.forEach((k) => {
+        if (k === 'paths') {
+            optionsCast.paths.forEach((pathObj) => {
+                const [ jsonPath, options ] = pathObj
+                if (jsonPath.startsWith('$.')) {
+                    try {
+                        jp.parse(jsonPath)
+                    } catch (err) {
+                        errors.push(`Invalid jsonpath key: ${err}`)
+                        return
+                    }
+                    const errMsg = stringOptionError(options)
+                    if (errMsg) {
+                        errors.push(`jsonpath ${jsonPath}: ${errMsg}`)
+                    }
+                } else {
+                    errors.push(`Unrecognized jsonpath syntax: ${jsonPath}`)
+                }
+            })
+        } else{
             if ( k === 'ignoreNewProperties' || k === 'missingIsDelete' ) {
                 return
             }
@@ -79,7 +93,7 @@ export async function merge(current: string, fromTemplateRepo: string, context: 
     paths.forEach((p) => {
         const [ jPath, overrideType ] = p
 
-        let fromTemplatePaths: Map<string, PathComponent[]> = new Map()
+        const fromTemplatePaths: Map<string, PathComponent[]> = new Map()
         if (overrideType === 'merge-template') {
             // We want to make sure there aren't extra paths from the template that didn't get added
             jp.nodes(fromTemplateJson, jPath).forEach((n) => {
@@ -115,7 +129,7 @@ export async function merge(current: string, fromTemplateRepo: string, context: 
         })
 
         if (!ignoreNewProperties) {
-            for(let fromTemplatePath of fromTemplatePaths.values()) {
+            for(const fromTemplatePath of fromTemplatePaths.values()) {
                 applyPerPath(fromTemplatePath, returnJson, fromTemplateJson)
             }
         }
@@ -136,7 +150,7 @@ export async function merge(current: string, fromTemplateRepo: string, context: 
  * A merge from a template to template perspective is either melding objects
  * or completely overwriting primitive types
  */
-function applyValueMerge(base: any, toMerge: any) {
+function applyValueMerge(base: unknown, toMerge: unknown) {
     if (typeof base === 'object' && typeof toMerge === 'object') {
         return lodashMerge(base, toMerge)
     } else {
@@ -153,6 +167,7 @@ function applyValueMerge(base: any, toMerge: any) {
  * @param map 
  * @param forIdx 
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyPerPath(nodePath: jp.PathComponent[], onto: any, map: any, forIdx = 0) {
     if (nodePath[forIdx] === '$') {
         applyPerPath(nodePath, onto, map, forIdx + 1)

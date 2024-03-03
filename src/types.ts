@@ -49,7 +49,7 @@ export interface MergeConfig<T> {
 /**
  * The base shape of a template sync config file
  */
-export interface Config<T = any> {
+export interface Config<T = unknown> {
     ignore: string[],
     /**
      * If there is no merge config, then we will always just overwrite the file for the diff
@@ -63,7 +63,7 @@ export interface Config<T = any> {
  * Information around the file we are trying to merge and that arguments for that merge
  * from matching a merge configuration
  */
-export interface MergeContext<PluginOptions = any> {
+export interface MergeContext<PluginOptions = unknown> {
     relFilePath: string,
     /**
      * If you have provided a custom merge plugin, this will be the "options" section of 
@@ -94,7 +94,7 @@ export interface MergePlugin<PluginOptions> {
     merge(current: string, fromTemplateRepo: string, context: MergeContext<PluginOptions>): Promise<string>
     /**
      * Given an options object for the merge, this validates the options object and returns error messages if there is anything wrong.
-     * @param options 
+     * @param options any json value that the user provided - must be validated against the expected options
      */
-    validate(options: PluginOptions): string[] | undefined
+    validate(options: unknown): string[] | undefined
 }

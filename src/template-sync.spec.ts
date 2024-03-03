@@ -1,4 +1,4 @@
-import { copy, copySync } from "fs-extra"
+import { copy } from "fs-extra"
 import { mkdtemp, readFile, rm } from "fs/promises"
 import { tmpdir } from "os"
 import { templateSync } from "./template-sync"

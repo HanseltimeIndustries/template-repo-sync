@@ -1,4 +1,6 @@
-import { merge } from "./json-merge"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { JsonPathOverrides } from "../types"
+import { merge, validate } from "./json-merge"
 
 const testFileJson = {
     here: 'here',
@@ -230,5 +232,62 @@ describe('merge', () => {
                 }
             }
         })
+    })
+})
+
+describe('validate', () => {
+    it('passes correct flat mapped values', () => {
+        expect(validate('merge-template')).toEqual([])
+    })
+    it('passes correct options object', () => {
+        expect(validate({
+            ignoreNewProperties: true,
+            missingIsDelete: false,
+            paths: [
+                ['$.something', 'merge-current'],
+                ['$.something[*].values', 'merge-current'],
+            ]
+        } as JsonPathOverrides)).toEqual([])
+    })
+    it('returns an error if a flat map value is not correct', () => {
+        expect(validate('bad-merge-options')).toEqual([
+            'bad-merge-options must be one of type overwrite, merge-template, or merge-current'
+        ])
+    })
+    it('returns an unknown key exits in options object', () => {
+        expect(validate({
+                unknownKey: 'something',
+                paths: [
+                    ["$.here", 'merge-template'],
+                    ["$.inner.nested.*", 'merge-template'],
+                    ["$.inner.nested.final", "merge-current"],
+                ]
+            },
+        )).toEqual([
+            'Unrecognized key: unknownKey',
+        ])
+    })
+    it('returns a type error if the options object is an array', () => {
+        expect(validate([])).toEqual([
+            'Options must be an object and not Array',
+        ])
+    })
+    it('returns a type error if the options object is  null', () => {
+        expect(validate(null)).toEqual([
+            'Options cannot be null',
+        ])
+    })
+    it('returns a type error for each path that is invalid', () => {
+        expect(validate({
+            paths: [
+                ['$.badc/value', 'merge-template'],
+                ['no$', 'merge-template'],
+                ['$.something', 'not a value']
+            ]
+        })).toEqual([
+            'Invalid jsonpath key: Error: Lexical error on line 1. Unrecognized text.\n$.badc/value\n------^',
+            'Unrecognized jsonpath syntax: no$',
+            'jsonpath $.something: not a value must be one of type overwrite, merge-template, or merge-current'
+        ])
     })
 })

@@ -4,7 +4,7 @@ import { existsSync } from "fs"
 import { resolve } from "path"
 
 export async function loadPlugin<T>(mergeConfig: MergeConfig<T>, forExt: string, configDir: string): Promise<MergePlugin<T>> {
-    let handler: MergePlugin<any>
+    let handler: MergePlugin<unknown>
     if (mergeConfig.plugin) {
         // First check if this is a loal .js file
         const localPath = resolve(configDir, mergeConfig.plugin)
@@ -12,15 +12,17 @@ export async function loadPlugin<T>(mergeConfig: MergeConfig<T>, forExt: string,
         try {
             // Sad workaround for testing since dynamic import segfaults
             if (process.env.JEST_WORKER_ID !== undefined) {
-                handler = require(importPath) as MergePlugin<any>
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                handler = require(importPath) as MergePlugin<unknown>
             } else {
-                handler = await import(importPath) as MergePlugin<any>
+                handler = await import(importPath) as MergePlugin<unknown>
             }
             if (!handler.merge) {
-                handler = (handler as unknown as { default: MergePlugin<any> }).default
+                handler = (handler as unknown as { default: MergePlugin<unknown> }).default
             }
         } catch (err) {
-            console.log(err)
+            console.error(err)
+            throw err
         }
     } else {
         if (!defaultExtensionMap[forExt]) {
@@ -29,6 +31,5 @@ export async function loadPlugin<T>(mergeConfig: MergeConfig<T>, forExt: string,
         handler = defaultExtensionMap[forExt]
     }
 
-    // @ts-ignore
-    return handler
+    return handler as MergePlugin<T>
 }

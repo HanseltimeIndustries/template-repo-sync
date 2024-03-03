@@ -2,7 +2,7 @@ import { isMatch, some } from "micromatch"
 import { Config, MergeContext, MergePlugin } from "./types"
 import { extname, join } from "path"
 import { existsSync } from "fs"
-import { readFile, writeFile } from "fs/promises"
+import { readFile } from "fs/promises"
 import { loadPlugin } from "./load-plugin"
 import { Change, diffLines } from "diff"
 import { outputFile } from "fs-extra"
@@ -52,7 +52,7 @@ export async function mergeFile(relPath: string, context: MergeFileOptions): Pro
 
     // Either write the merge or write
     let fileContents: string
-    let localChanges = []
+    const localChanges = []
     if (existsSync(filePath) && (mergeConfig || localMergeConfig)) {
         const originalCurrentFile = (await readFile(filePath)).toString()
         if (mergeConfig) {
@@ -111,7 +111,7 @@ export async function mergeFile(relPath: string, context: MergeFileOptions): Pro
  * Simple helper function to ensure that we don't let bad plugins corrupt the call flow
  * @param plugin 
  */
-async function safeMerge(plugin: MergePlugin<any>, pluginPath: string, current: string, fromTemplate: string, context: MergeContext) {
+async function safeMerge(plugin: MergePlugin<unknown>, pluginPath: string, current: string, fromTemplate: string, context: MergeContext) {
     const ret = await plugin.merge(current, fromTemplate, context)
     if (typeof ret !== "string") {
         throw new Error(`Plugin ${pluginPath} did not return string for merge function!  This is not allowed!`)
