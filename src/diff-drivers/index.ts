@@ -1,2 +1,2 @@
-export * from './types'
-export * from './git-diff'
+export * from "./types";
+export * from "./git-diff";
