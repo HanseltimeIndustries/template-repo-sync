@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`syncResultsToMd snapshots 1`] = `
+"# templatesync.local 
+
+## Stopped the following files from syncing:
+
+* src/file1.ts
+
+
+## Changed the following files from what they would have synced:
+
+package.json
+\`\`\`diff
+
++my thing
+
+-your thang
+
+\`\`\`
+"
+`;

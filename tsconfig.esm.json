@@ -1,0 +1,10 @@
+// Base ESM tsconfig file for builds
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules/**/*",
+    "test-fixtures/**/*",
+    "lib/**/*",
+    "src/**/*.spec.ts"
+  ],
+}

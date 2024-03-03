@@ -1,4 +1,4 @@
-// Base ESM tsconfig file
+// Base ESM tsconfig file for ts-jest
 {
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */

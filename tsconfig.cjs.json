@@ -1,6 +1,6 @@
 // Overrides for building to cjs
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.esm.json",
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
