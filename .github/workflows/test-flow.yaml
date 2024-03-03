@@ -52,7 +52,7 @@ jobs:
       - name: linting
         run: |
           npm run lint
-          npx run prettier . --check
+          npx prettier . --check
       - name: testing
         run: |
           npm run test

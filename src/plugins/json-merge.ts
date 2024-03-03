@@ -182,10 +182,11 @@ function applyValueMerge(base: unknown, toMerge: unknown) {
  * @param map
  * @param forIdx
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyPerPath(
   nodePath: jp.PathComponent[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onto: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   map: any,
   forIdx = 0,
 ) {
