@@ -4,9 +4,9 @@
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
-    "module": "CommonJS",                                /* Specify what module code is generated. */
+    "module": "CommonJS" /* Specify what module code is generated. */,
     "outDir": "./lib/cjs",
     "moduleResolution": "Node",
     "declaration": true
-  },
+  }
 }

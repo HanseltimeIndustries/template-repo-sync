@@ -1,7 +1,11 @@
 module.exports = {
-    merge: () => {
-        return JSON.stringify({
-            downstream: true,
-        }, null, 4)
-    }
-}
+  merge: () => {
+    return JSON.stringify(
+      {
+        downstream: true,
+      },
+      null,
+      4,
+    );
+  },
+};

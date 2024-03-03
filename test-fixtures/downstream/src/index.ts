@@ -1,1 +1,1 @@
-console.log('This is my custom stuff')
+console.log("This is my custom stuff");

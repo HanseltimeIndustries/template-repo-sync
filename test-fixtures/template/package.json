@@ -1,17 +1,17 @@
 {
-    "name": "some-stub-name",
-    "description": "some-stub-description",
-    "dependencies": {
-        "mypackage": "^1.2.0",
-        "package2": "3.22.1",
-        "huh": "~1.0.0"
-    },
-    "engines": {
-        "node": ">=15"
-    },
-    "scripts": {
-        "build": "build",
-        "test": "fill this in yourself"
-    },
-    "version": "new-version"
+  "name": "some-stub-name",
+  "description": "some-stub-description",
+  "dependencies": {
+    "mypackage": "^1.2.0",
+    "package2": "3.22.1",
+    "huh": "~1.0.0"
+  },
+  "engines": {
+    "node": ">=15"
+  },
+  "scripts": {
+    "build": "build",
+    "test": "fill this in yourself"
+  },
+  "version": "new-version"
 }

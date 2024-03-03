@@ -1,21 +1,15 @@
 {
-    "ignore": [
-        "**/*.md"
-    ],
-    "merge": {
-        ".json": {
-            "rules": [
-                {
-                    "glob": "package.json",
-                    "options": {
-                        "paths": [
-                            [
-                                "$.repository", "merge-template"
-                            ]
-                        ]
-                    }
-                }
-            ]
+  "ignore": ["**/*.md"],
+  "merge": {
+    ".json": {
+      "rules": [
+        {
+          "glob": "package.json",
+          "options": {
+            "paths": [["$.repository", "merge-template"]]
+          }
         }
+      ]
     }
+  }
 }
