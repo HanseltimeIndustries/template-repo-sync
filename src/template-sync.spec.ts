@@ -1,8 +1,7 @@
 import { copy } from "fs-extra"
 import { mkdtemp, readFile, rm } from "fs/promises"
-import { tmpdir } from "os"
 import { templateSync } from "./template-sync"
-import { TEST_FIXTURES_DIR } from "./test-utils"
+import { tempDir, TEST_FIXTURES_DIR } from "./test-utils"
 import { join, resolve } from "path"
 import { existsSync, readFileSync, writeFileSync } from "fs"
 
@@ -16,7 +15,7 @@ const downstreamDir = resolve(TEST_FIXTURES_DIR, 'downstream')
 describe('templateSync', () => {
     let tmpDir: string
     beforeEach(async () => {
-        tmpDir = await mkdtemp(tmpdir())
+        tmpDir = await mkdtemp(tempDir())
         await copy(downstreamDir, tmpDir)
     })
     afterEach(async () => {
@@ -26,7 +25,7 @@ describe('templateSync', () => {
         })
     })
     it('appropriately merges according to just the templatesync config file into an empty dir', async () => {
-        const emptyTmpDir = await mkdtemp(tmpdir())
+        const emptyTmpDir = await mkdtemp(tempDir())
         expect(await templateSync({
             tmpCloneDir: 'stubbed-by-driver',
             cloneDriver: dummyCloneDriver,

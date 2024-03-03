@@ -1,8 +1,7 @@
 import { join, resolve } from "path"
 import { mergeFile } from "./merge-file"
-import { TEST_FIXTURES_DIR } from "./test-utils"
+import { tempDir, TEST_FIXTURES_DIR } from "./test-utils"
 import { mkdtemp, readFile, rm } from "fs/promises"
-import { tmpdir } from "os"
 import { copySync} from 'fs-extra'
 import { JsonFileMergeOptions } from "./types"
 
@@ -12,7 +11,7 @@ const testDownstreamDir = resolve(TEST_FIXTURES_DIR, 'downstream')
 describe('mergeFile', () => {
     let tmpDir: string
     beforeEach(async () => {
-        tmpDir = await mkdtemp(tmpdir())
+        tmpDir = await mkdtemp(tempDir())
         copySync(testDownstreamDir, tmpDir)
     })
     afterEach(async () => {
