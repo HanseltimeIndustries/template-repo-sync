@@ -192,6 +192,127 @@ describe("templateSync", () => {
     await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
     await fileMatchDownstream(tmpDir, "package.json");
   });
+  it("updates the local templatesync with the current ref if updateAfterRef is true", async () => {
+    // Remove the local sync overrides
+    await rm(join(tmpDir, "templatesync.local.json"));
+
+    const mockLocalConfig = {
+      afterRef: "dummySha",
+      ignore: [
+        // We don't have a need for this in here, but it's an example of keeping things cleaner for our custom plugins
+        "plugins/**",
+      ],
+    };
+
+    writeFileSync(
+      join(tmpDir, "templatesync.local.json"),
+      JSON.stringify(mockLocalConfig),
+    );
+
+    // We will only update the templated.ts
+    const mockDiffDriver = jest
+      .fn()
+      .mockImplementation(async () => ["src/templated.ts"]);
+    const mockCurrentRefDriver = jest
+      .fn()
+      .mockImplementation(async () => "newestSha");
+    const result = await templateSync({
+      tmpCloneDir: "stubbed-by-driver",
+      cloneDriver: dummyCloneDriver,
+      repoUrl: "not-important",
+      repoDir: tmpDir,
+      updateAfterRef: true,
+      diffDriver: mockDiffDriver,
+      currentRefDriver: mockCurrentRefDriver,
+    });
+
+    // since there was no override for this file, not changes from the local file
+    expect(result.localFileChanges).toEqual(expect.objectContaining({}));
+
+    // Verify the files
+    await fileMatchTemplate(tmpDir, "templatesync.json");
+    await fileMatchTemplate(tmpDir, "src/templated.ts");
+
+    // Expect the none of the diff files to work
+    await fileMatchDownstream(tmpDir, "src/index.ts");
+    await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
+    await fileMatchDownstream(tmpDir, "package.json");
+
+    // Ensure we have updated the local template field
+    expect(
+      JSON.parse(
+        (await readFile(join(tmpDir, "templatesync.local.json"))).toString(),
+      ),
+    ).toEqual({
+      ...mockLocalConfig,
+      afterRef: "newestSha",
+    });
+  });
+  it("creates the local templatesync with the current ref if updateAfterRef is true and no local template exists", async () => {
+    // Remove the local sync overrides
+    await rm(join(tmpDir, "templatesync.local.json"));
+
+    // We will only update the templated.ts
+    const mockDiffDriver = jest
+      .fn()
+      .mockImplementation(async () => ["src/templated.ts"]);
+    const mockCurrentRefDriver = jest
+      .fn()
+      .mockImplementation(async () => "newestSha");
+    const result = await templateSync({
+      tmpCloneDir: "stubbed-by-driver",
+      cloneDriver: dummyCloneDriver,
+      repoUrl: "not-important",
+      repoDir: tmpDir,
+      updateAfterRef: true,
+      diffDriver: mockDiffDriver,
+      currentRefDriver: mockCurrentRefDriver,
+    });
+
+    // since there was no override for this file, not changes from the local file
+    expect(result.localFileChanges).toEqual(expect.objectContaining({}));
+
+    // Verify the files
+    await fileMatchTemplate(tmpDir, "templatesync.json");
+    await fileMatchTemplate(tmpDir, "src/templated.ts");
+    const packageJson = JSON.parse(
+      readFileSync(resolve(tmpDir, "package.json")).toString(),
+    );
+
+    expect(packageJson).toEqual({
+      name: "mypkg",
+      description: "my description",
+      dependencies: {
+        mypackage: "^1.2.0",
+        newpacakge: "^22.2.2",
+        package2: "3.22.1",
+        huh: "~1.0.0",
+      },
+      engines: {
+        node: ">=15",
+      },
+      scripts: {
+        build: "build",
+        test: "jest",
+        myscript: "somescript",
+      },
+      // By default we add new top-level fields
+      version: "new-version",
+    });
+
+    // Expect the none of the diff files to work
+    await fileMatchDownstream(tmpDir, "src/index.ts");
+    await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
+
+    // Ensure we have updated the local template field
+    expect(
+      JSON.parse(
+        (await readFile(join(tmpDir, "templatesync.local.json"))).toString(),
+      ),
+    ).toEqual({
+      afterRef: "newestSha",
+    });
+  });
 });
 
 // helper
