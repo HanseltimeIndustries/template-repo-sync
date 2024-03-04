@@ -93,12 +93,20 @@ export async function merge(
 
   if (context.mergeArguments === "merge-current") {
     // Performs Lodash Merge with current as the override
-    return JSON.stringify(lodashMerge(fromTemplateJson, currentJson), null, 4);
+    return JSON.stringify(
+      lodashMerge(fromTemplateJson, currentJson),
+      null,
+      inferJSONIndent(current),
+    );
   }
 
   if (context.mergeArguments === "merge-template") {
     // Performs Lodash Merge with current as the override
-    return JSON.stringify(lodashMerge(currentJson, fromTemplateJson), null, 4);
+    return JSON.stringify(
+      lodashMerge(currentJson, fromTemplateJson),
+      null,
+      inferJSONIndent(current),
+    );
   }
 
   const { missingIsDelete, ignoreNewProperties, paths } =

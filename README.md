@@ -1,4 +1,4 @@
-# Template Sync Action
+# Template Sync
 
 This npm package seeks to provide further granularity for people hoping to maintain a base template repo in github that
 is either imported or used as a literal template repo.
@@ -61,7 +61,11 @@ export interface Config {
 }
 ```
 
-### Example 1
+### Example 1 - Using a custom plugin
+
+In this scenario, you have installed a package that exposes the correct plugin interface for handling .ini file contents in
+your implementing repository and set up this templatesync.local config file. Because of this, we can be assured that .ini files
+in the local repo will be merged using the plugin we specified.
 
 ```typescript
 {
@@ -70,7 +74,34 @@ export interface Config {
         ".ini": {
             // If you are running under pacakge manager like yarn or npm,
             // you can provide a valid pacakge or .js fil from your package to run
-            driver: 'my-installed-npm-package',
+            plugin: 'my-installed-npm-package',
+        }
+    }
+}
+```
+
+### Example 2 - Using a custom plugin for some paths
+
+Just like in example 1, we have installed a plugin that exposes the correct plugin interface. Now though,
+instead of applying that plugin to all '.ini' files, we are saying that, for this particular set of .ini
+files, only the ones in custom-configs/ will use this merge operator.
+
+```typescript
+{
+
+    merge: {
+        ".ini": {
+            // If you are running under pacakge manager like yarn or npm,
+            // you can provide a valid pacakge or .js fil from your package to run
+            plugin: 'my-installed-npm-package',
+            rule: [
+                {
+                    glob: 'custom-configs/**',
+                    options: {
+                        myPluginParam: 'some parameter',
+                    }
+                }
+            ]
         }
     }
 }
@@ -91,3 +122,35 @@ but it does mean that you will only see the changes to files that are newer than
 
 As always, you can remove the SHA/Tag from your local config and this will trigger a full sync in the event that you made the wrong
 assumption about merging templates correctly.
+
+```typescript
+{
+    afterRef: 'git sha',
+    merge: {
+        ".ini": {
+            // If you are running under pacakge manager like yarn or npm,
+            // you can provide a valid pacakge or .js fil from your package to run
+            plugin: 'my-installed-npm-package',
+            rule: [
+                {
+                    glob: 'custom-configs/**',
+                    options: {
+                        myPluginParam: 'some parameter',
+                    }
+                }
+            ]
+        }
+    }
+}
+```
+
+## Programmatic API
+
+The programmatic api for this package is centered around `templateSync`. The way the function is written, we try to
+allow escape hatches for other styles of comparison in the form of "TemplateDriver" functions. As part of the current
+implementation, all of these `drivers` represent git actions, but for the sake of expandability, may be set up to evaluate
+things like helm chart renderings (at least that is the hope). If you write a driver, please consider contributing it back.
+
+Please see [template-sync](./src/template-sync.ts) for the most up to date options.
+
+TODO: we should update use case examples

@@ -1,5 +1,5 @@
 import { join } from "path";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { getAllFilesInDir } from "./match";
 import { Config, LocalConfig } from "./types";
 import { mergeFile } from "./merge-file";
@@ -7,6 +7,9 @@ import { gitClone } from "./clone-drivers/git-clone";
 import { Change } from "diff";
 import { TemplateCloneDriverFn } from "./clone-drivers";
 import { TemplateDiffDriverFn, gitDiff } from "./diff-drivers";
+import { gitCurrentRef } from "./ref-drivers";
+import { TemplateRefDriverFn } from "./ref-drivers/types";
+import { inferJSONIndent } from "./formatting";
 
 export interface TemplateSyncOptions {
   repoUrl: string;
@@ -22,6 +25,12 @@ export interface TemplateSyncOptions {
   repoDir: string;
 
   /**
+   * If set to true, template sync will apply the current ref
+   * of the template repo to afterRef
+   */
+  updateAfterRef?: boolean;
+
+  /**
    * Defaults to using git clone
    */
   cloneDriver?: TemplateCloneDriverFn;
@@ -30,6 +39,11 @@ export interface TemplateSyncOptions {
    * Defaults to using git diff
    */
   diffDriver?: TemplateDiffDriverFn;
+
+  /**
+   * Defaults to using git current ref
+   */
+  currentRefDriver?: TemplateRefDriverFn;
 }
 
 export interface TemplateSyncReturn {
@@ -56,6 +70,7 @@ export async function templateSync(
 ): Promise<TemplateSyncReturn> {
   const cloneDriver = options.cloneDriver ?? gitClone;
   const diffDriver = options.diffDriver ?? gitDiff;
+  const currentRefDriver = options.currentRefDriver ?? gitCurrentRef;
   const tempCloneDir = await cloneDriver(options.tmpCloneDir, options.repoUrl);
 
   // Get the clone Config
@@ -105,6 +120,28 @@ export async function templateSync(
       }
     }),
   );
+
+  // apply after ref
+  if (options.updateAfterRef) {
+    const ref = await currentRefDriver({
+      rootDir: tempCloneDir,
+    });
+
+    if (existsSync(localConfigPath)) {
+      const configStr = readFileSync(localConfigPath).toString();
+      const config = JSON.parse(configStr) as LocalConfig;
+      config.afterRef = ref;
+      writeFileSync(
+        localConfigPath,
+        JSON.stringify(config, null, inferJSONIndent(configStr)),
+      );
+    } else {
+      writeFileSync(
+        localConfigPath,
+        JSON.stringify({ afterRef: ref }, null, 4),
+      );
+    }
+  }
 
   return {
     localSkipFiles,
