@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.0.1...v1.1.0) (2024-03-04)
+
+
+### Features
+
+* adding updateRef Option ([b553e65](https://github.com/HanseltimeIndustries/template-repo-sync/commit/b553e65ebce59777ccb80728d540c5734d41cab7))
+
 ## [1.0.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.0.0...v1.0.1) (2024-03-03)
 
 
