@@ -10,6 +10,7 @@ import { TemplateDiffDriverFn, gitDiff } from "./diff-drivers";
 import { gitCurrentRef } from "./ref-drivers";
 import { TemplateRefDriverFn } from "./ref-drivers/types";
 import { inferJSONIndent } from "./formatting";
+import * as commentJSON from 'comment-json'
 
 export interface TemplateSyncOptions {
   repoUrl: string;
@@ -76,16 +77,16 @@ export async function templateSync(
   // Get the clone Config
   const cloneConfigPath = join(tempCloneDir, `${TEMPLATE_SYNC_CONFIG}.json`);
   const templateSyncConfig: Config = existsSync(cloneConfigPath)
-    ? JSON.parse(readFileSync(cloneConfigPath).toString())
-    : {};
+    ? commentJSON.parse(readFileSync(cloneConfigPath).toString()) as unknown as Config
+    : { ignore: [] };
 
   const localConfigPath = join(
     options.repoDir,
     `${TEMPLATE_SYNC_LOCAL_CONFIG}.json`,
   );
-  const localTemplateSyncConfig = existsSync(localConfigPath)
-    ? JSON.parse(readFileSync(localConfigPath).toString())
-    : ({} as LocalConfig);
+  const localTemplateSyncConfig: LocalConfig = existsSync(localConfigPath)
+    ? commentJSON.parse(readFileSync(localConfigPath).toString()) as unknown as LocalConfig
+    : { ignore: [] };
 
   let filesToSync: string[];
   if (localTemplateSyncConfig.afterRef) {
@@ -129,16 +130,16 @@ export async function templateSync(
 
     if (existsSync(localConfigPath)) {
       const configStr = readFileSync(localConfigPath).toString();
-      const config = JSON.parse(configStr) as LocalConfig;
+      const config = commentJSON.parse(configStr) as unknown as LocalConfig;
       config.afterRef = ref;
       writeFileSync(
         localConfigPath,
-        JSON.stringify(config, null, inferJSONIndent(configStr)),
+        commentJSON.stringify(config, null, inferJSONIndent(configStr)),
       );
     } else {
       writeFileSync(
         localConfigPath,
-        JSON.stringify({ afterRef: ref }, null, 4),
+        commentJSON.stringify({ afterRef: ref }, null, 4),
       );
     }
   }

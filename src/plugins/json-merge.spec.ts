@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { JsonPathOverrides } from "../types";
 import { merge, validate } from "./json-merge";
+import * as commentJson from 'comment-json'
 
 const testFileJson = {
   here: "here",
@@ -23,6 +24,21 @@ const templateFileJson = {
     extra2: "extra2",
   },
 };
+
+const testCommentJson = `{
+  // This is a top comment
+  "here": "here",
+  "another": 23, // this is inline
+  "inner": {
+    "el1": "el1",
+    "arr1": ["a1", "a2"],
+    "nested": {
+      // Upper comment
+      "final": "final", // Inline commment
+      "final2": "final2",
+    },
+  },
+}`
 
 describe("merge", () => {
   it("performs overwrite when specified", async () => {
@@ -291,6 +307,66 @@ describe("merge", () => {
       },
     });
   });
+  it("performs pathjson merges on comment json", async () => {
+    const template = { ...templateFileJson };
+    (template.inner as any).nested = {
+      final: { something: 44 },
+      newThing: "this",
+    };
+
+    const testTemplateCommentJson = `{
+      "here": "heretemplate",
+      /** New comment explaining extra **/
+      "extra": "extra",
+      "inner": {
+        "arr1": ["b1", "b2"],
+        "extra2": "extra2",
+        "nested": {
+          "final": {
+            // New comment explaining final
+            "something": 44,
+          },
+          "newThing": {
+            // new thing comment
+            "this": 23,
+          },
+        }
+      },
+    }`
+
+    expect(
+      commentJson.stringify(commentJson.parse(
+        await merge(testCommentJson, testTemplateCommentJson, {
+          relFilePath: "somepath",
+          mergeArguments: {
+            paths: [
+              ["$.here", "merge-template"],
+              ["$.inner.nested.*", "merge-template"],
+              ["$.inner.nested.final", "merge-current"],
+            ],
+          },
+        })), null, 4),
+    ).toEqual(
+      commentJson.stringify(commentJson.parse(`{
+        // This is a top comment
+        "here": "heretemplate",
+        "another": 23, // this is inline
+        "inner": {
+          "el1": "el1",
+          "arr1": ["a1", "a2"],
+          "nested": {
+            // Upper comment
+            "final": "final", // Inline commment
+            "final2": "final2",
+            "newThing": {
+              // new thing comment
+              "this": 23,
+            },
+          },
+        },
+        "extra": "extra",
+      }`), null, 4));
+  });
 });
 
 describe("validate", () => {
@@ -348,3 +424,4 @@ describe("validate", () => {
     ]);
   });
 });
+

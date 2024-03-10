@@ -4,9 +4,9 @@ import {
   JsonPathOverrides,
 } from "../types";
 import lodashMerge from "lodash.merge";
-import locashCloneDeep from "lodash.clonedeep";
 import jp, { PathComponent } from "jsonpath";
 import { inferJSONIndent } from "../formatting/infer-json-indent";
+import * as commentJSON from 'comment-json'
 
 function stringOptionError(value: string) {
   if (
@@ -88,12 +88,12 @@ export async function merge(
     return fromTemplateRepo;
   }
 
-  const currentJson = JSON.parse(current);
-  const fromTemplateJson = JSON.parse(fromTemplateRepo);
+  const currentJson = commentJSON.parse(current) as commentJSON.CommentObject;
+  const fromTemplateJson = commentJSON.parse(fromTemplateRepo) as commentJSON.CommentObject;
 
   if (context.mergeArguments === "merge-current") {
     // Performs Lodash Merge with current as the override
-    return JSON.stringify(
+    return commentJSON.stringify(
       lodashMerge(fromTemplateJson, currentJson),
       null,
       inferJSONIndent(current),
@@ -102,7 +102,7 @@ export async function merge(
 
   if (context.mergeArguments === "merge-template") {
     // Performs Lodash Merge with current as the override
-    return JSON.stringify(
+    return commentJSON.stringify(
       lodashMerge(currentJson, fromTemplateJson),
       null,
       inferJSONIndent(current),
@@ -112,7 +112,7 @@ export async function merge(
   const { missingIsDelete, ignoreNewProperties, paths } =
     context.mergeArguments as JsonPathOverrides;
 
-  const returnJson = locashCloneDeep(currentJson);
+  const returnJson = commentJSON.parse(current) as commentJSON.CommentObject;
   paths.forEach((p) => {
     const [jPath, overrideType] = p;
 
@@ -166,7 +166,7 @@ export async function merge(
     });
   }
 
-  return JSON.stringify(returnJson, null, inferJSONIndent(current));
+  return commentJSON.stringify(returnJson, null, inferJSONIndent(current));
 }
 
 /**
