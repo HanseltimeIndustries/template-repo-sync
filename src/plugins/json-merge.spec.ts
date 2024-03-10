@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { JsonPathOverrides } from "../types";
 import { merge, validate } from "./json-merge";
-import * as commentJson from 'comment-json'
+import * as commentJson from "comment-json";
 
 const testFileJson = {
   here: "here",
@@ -38,7 +38,7 @@ const testCommentJson = `{
       "final2": "final2",
     },
   },
-}`
+}`;
 
 describe("merge", () => {
   it("performs overwrite when specified", async () => {
@@ -332,22 +332,28 @@ describe("merge", () => {
           },
         }
       },
-    }`
+    }`;
 
     expect(
-      commentJson.stringify(commentJson.parse(
-        await merge(testCommentJson, testTemplateCommentJson, {
-          relFilePath: "somepath",
-          mergeArguments: {
-            paths: [
-              ["$.here", "merge-template"],
-              ["$.inner.nested.*", "merge-template"],
-              ["$.inner.nested.final", "merge-current"],
-            ],
-          },
-        })), null, 4),
+      commentJson.stringify(
+        commentJson.parse(
+          await merge(testCommentJson, testTemplateCommentJson, {
+            relFilePath: "somepath",
+            mergeArguments: {
+              paths: [
+                ["$.here", "merge-template"],
+                ["$.inner.nested.*", "merge-template"],
+                ["$.inner.nested.final", "merge-current"],
+              ],
+            },
+          }),
+        ),
+        null,
+        4,
+      ),
     ).toEqual(
-      commentJson.stringify(commentJson.parse(`{
+      commentJson.stringify(
+        commentJson.parse(`{
         // This is a top comment
         "here": "heretemplate",
         "another": 23, // this is inline
@@ -365,7 +371,11 @@ describe("merge", () => {
           },
         },
         "extra": "extra",
-      }`), null, 4));
+      }`),
+        null,
+        4,
+      ),
+    );
   });
 });
 
@@ -424,4 +434,3 @@ describe("validate", () => {
     ]);
   });
 });
-

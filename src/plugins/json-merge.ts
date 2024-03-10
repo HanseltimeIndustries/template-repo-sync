@@ -6,7 +6,7 @@ import {
 import lodashMerge from "lodash.merge";
 import jp, { PathComponent } from "jsonpath";
 import { inferJSONIndent } from "../formatting/infer-json-indent";
-import * as commentJSON from 'comment-json'
+import * as commentJSON from "comment-json";
 
 function stringOptionError(value: string) {
   if (
@@ -89,7 +89,9 @@ export async function merge(
   }
 
   const currentJson = commentJSON.parse(current) as commentJSON.CommentObject;
-  const fromTemplateJson = commentJSON.parse(fromTemplateRepo) as commentJSON.CommentObject;
+  const fromTemplateJson = commentJSON.parse(
+    fromTemplateRepo,
+  ) as commentJSON.CommentObject;
 
   if (context.mergeArguments === "merge-current") {
     // Performs Lodash Merge with current as the override

@@ -10,7 +10,7 @@ import { TemplateDiffDriverFn, gitDiff } from "./diff-drivers";
 import { gitCurrentRef } from "./ref-drivers";
 import { TemplateRefDriverFn } from "./ref-drivers/types";
 import { inferJSONIndent } from "./formatting";
-import * as commentJSON from 'comment-json'
+import * as commentJSON from "comment-json";
 
 export interface TemplateSyncOptions {
   repoUrl: string;
@@ -77,7 +77,9 @@ export async function templateSync(
   // Get the clone Config
   const cloneConfigPath = join(tempCloneDir, `${TEMPLATE_SYNC_CONFIG}.json`);
   const templateSyncConfig: Config = existsSync(cloneConfigPath)
-    ? commentJSON.parse(readFileSync(cloneConfigPath).toString()) as unknown as Config
+    ? (commentJSON.parse(
+        readFileSync(cloneConfigPath).toString(),
+      ) as unknown as Config)
     : { ignore: [] };
 
   const localConfigPath = join(
@@ -85,7 +87,9 @@ export async function templateSync(
     `${TEMPLATE_SYNC_LOCAL_CONFIG}.json`,
   );
   const localTemplateSyncConfig: LocalConfig = existsSync(localConfigPath)
-    ? commentJSON.parse(readFileSync(localConfigPath).toString()) as unknown as LocalConfig
+    ? (commentJSON.parse(
+        readFileSync(localConfigPath).toString(),
+      ) as unknown as LocalConfig)
     : { ignore: [] };
 
   let filesToSync: string[];

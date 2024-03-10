@@ -42,7 +42,7 @@ export interface MergeConfig<T> {
    */
   plugin?: string;
   /**
-   * An array of first match file globs that will
+   * An array of first match file globs that will then call the plugin with the appropriate options
    */
   rules: { glob: string; options: MergePluginOptions | T }[];
 }
