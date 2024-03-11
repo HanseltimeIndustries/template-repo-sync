@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.1.0...v1.2.0) (2024-03-11)
+
+
+### Features
+
+* adding comment-json support for merges ([c4393aa](https://github.com/HanseltimeIndustries/template-repo-sync/commit/c4393aaa6bf3bb985670f4377f2a370338450618))
+
 # [1.1.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.0.1...v1.1.0) (2024-03-04)
 
 
