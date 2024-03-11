@@ -13,6 +13,16 @@ best practice development patterns, then we naturally want to have a way to allo
 changes, while also having control over things that may be specifically changed due to their need to support something beyond the
 orgnaization standard.
 
+- [Template Sync](#template-sync)
+- [How to use this](#how-to-use-this)
+  - [Config file](#config-file)
+    - [File format](#file-format)
+    - [Example 1 - Using a custom plugin](#example-1---using-a-custom-plugin)
+    - [Example 2 - Using a custom plugin for some paths](#example-2---using-a-custom-plugin-for-some-paths)
+  - [From SHA/Tag directive](#from-shatag-directive)
+  - [Programmatic API](#programmatic-api)
+  <!-- Created with Markdown All In One VsCode Entension, rerun to update -->
+
 # How to use this
 
 This repository publishes a github action that can be used for ease of use in github. It also provides itself as an npm package
@@ -31,6 +41,10 @@ There are two types of config files that you can create:
 This library will always respect the overrides of the local template sync file if it exists but, as a compromise to rapidly developing
 templates and their repos, will also provide a list of all files whose template sync behavior was either ignored or overridden by the local
 file. In this way, teams should be able to track (with a little extra CI/CD wiring) or at the very least, explicitly acknowledge a deviation.
+
+All config files have the ability to write custom merge plugins either in repo or published as packages for larger use.
+
+Please see the [plugins](./docs/merge-plugins/) documentation for more information beyond the simple examples in this readme.
 
 ### File format
 
