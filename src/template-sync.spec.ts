@@ -7,14 +7,20 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 
 // Just return the test-fixture directory
 const dummyCloneDriver = async () => {
-  return resolve(TEST_FIXTURES_DIR, "template");
+  return {
+    dir: resolve(TEST_FIXTURES_DIR, "template"),
+    remoteName: 'ourRemote',
+  }
 };
+
+const dummyCheckoutDriver = jest.fn()
 
 const downstreamDir = resolve(TEST_FIXTURES_DIR, "downstream");
 
 describe("templateSync", () => {
   let tmpDir: string;
   beforeEach(async () => {
+    jest.resetAllMocks()
     tmpDir = await mkdtemp(tempDir());
     await copy(downstreamDir, tmpDir);
   });
@@ -32,6 +38,7 @@ describe("templateSync", () => {
         cloneDriver: dummyCloneDriver,
         repoUrl: "not-important",
         repoDir: emptyTmpDir,
+        checkoutDriver: dummyCheckoutDriver,
       }),
     ).toEqual({
       // Expect no changes since there was no local sync file
@@ -47,6 +54,40 @@ describe("templateSync", () => {
     // Expect the ignores to not be a problem
     expect(existsSync(resolve(emptyTmpDir, "src/index.ts"))).toBeFalsy();
     expect(existsSync(resolve(emptyTmpDir, "src/custom-bin"))).toBeFalsy();
+
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
+  });
+  it("Checks out the branch and then appropriately merges", async () => {
+    const emptyTmpDir = await mkdtemp(tempDir());
+    expect(
+      await templateSync({
+        tmpCloneDir: "stubbed-by-driver",
+        cloneDriver: dummyCloneDriver,
+        repoUrl: "not-important",
+        repoDir: emptyTmpDir,
+        branch: 'new-template-test',
+        checkoutDriver: dummyCheckoutDriver,
+      }),
+    ).toEqual({
+      // Expect no changes since there was no local sync file
+      localSkipFiles: [],
+      localFileChanges: {},
+    });
+
+    // Verify the files
+    await fileMatchTemplate(emptyTmpDir, "templatesync.json");
+    await fileMatchTemplate(emptyTmpDir, "package.json");
+    await fileMatchTemplate(emptyTmpDir, "src/templated.ts");
+
+    // Expect the ignores to not be a problem
+    expect(existsSync(resolve(emptyTmpDir, "src/index.ts"))).toBeFalsy();
+    expect(existsSync(resolve(emptyTmpDir, "src/custom-bin"))).toBeFalsy();
+    const cloneInfo = await dummyCloneDriver()
+    expect(dummyCheckoutDriver).toHaveBeenCalledWith({
+      tmpDir: cloneInfo.dir,
+      remoteName: cloneInfo.remoteName,
+      branch: 'new-template-test',
+    })
   });
   it("appropriately merges according to just the templatesync config file in an existing repo", async () => {
     // Remove the local sync overrides
@@ -57,6 +98,7 @@ describe("templateSync", () => {
       cloneDriver: dummyCloneDriver,
       repoUrl: "not-important",
       repoDir: tmpDir,
+      checkoutDriver: dummyCheckoutDriver,
     });
 
     expect(result.localSkipFiles).toEqual([]);
@@ -93,6 +135,7 @@ describe("templateSync", () => {
     // Expect the ignores to not be a problem
     await fileMatchDownstream(tmpDir, "src/index.ts");
     await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled();
   });
   it("appropriately merges according to the templatesync config file and the local config in an existing repo", async () => {
     // Remove the local sync overrides
@@ -127,6 +170,7 @@ describe("templateSync", () => {
       cloneDriver: dummyCloneDriver,
       repoUrl: "not-important",
       repoDir: tmpDir,
+      checkoutDriver: dummyCheckoutDriver,
     });
 
     expect(result.localSkipFiles).toEqual(["src/templated.ts"]);
@@ -152,6 +196,7 @@ describe("templateSync", () => {
     // Expect the ignores to not be a problem
     await fileMatchDownstream(tmpDir, "src/index.ts");
     await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
   });
   it("appropriately merges according to the templatesync config file and the local config in an existing repo with afterRef", async () => {
     // Remove the local sync overrides
@@ -178,6 +223,7 @@ describe("templateSync", () => {
       repoUrl: "not-important",
       repoDir: tmpDir,
       diffDriver: mockDiffDriver,
+      checkoutDriver: dummyCheckoutDriver,
     });
 
     // since there was no override for this file, not changes from the local file
@@ -191,6 +237,7 @@ describe("templateSync", () => {
     await fileMatchDownstream(tmpDir, "src/index.ts");
     await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
     await fileMatchDownstream(tmpDir, "package.json");
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
   });
   it("updates the local templatesync with the current ref if updateAfterRef is true", async () => {
     // Remove the local sync overrides
@@ -224,6 +271,7 @@ describe("templateSync", () => {
       updateAfterRef: true,
       diffDriver: mockDiffDriver,
       currentRefDriver: mockCurrentRefDriver,
+      checkoutDriver: dummyCheckoutDriver,
     });
 
     // since there was no override for this file, not changes from the local file
@@ -247,6 +295,7 @@ describe("templateSync", () => {
       ...mockLocalConfig,
       afterRef: "newestSha",
     });
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
   });
   it("creates the local templatesync with the current ref if updateAfterRef is true and no local template exists", async () => {
     // Remove the local sync overrides
@@ -267,6 +316,7 @@ describe("templateSync", () => {
       updateAfterRef: true,
       diffDriver: mockDiffDriver,
       currentRefDriver: mockCurrentRefDriver,
+      checkoutDriver: dummyCheckoutDriver,
     });
 
     // since there was no override for this file, not changes from the local file
@@ -313,6 +363,7 @@ describe("templateSync", () => {
       afterRef: "newestSha",
     });
   });
+  expect(dummyCheckoutDriver).not.toHaveBeenCalled()
 });
 
 // helper
@@ -330,7 +381,7 @@ async function fileMatch(
   source: "downstream" | "template",
 ) {
   const dir =
-    source === "downstream" ? downstreamDir : await dummyCloneDriver();
+    source === "downstream" ? downstreamDir : (await dummyCloneDriver()).dir;
   expect((await readFile(resolve(tmpDir, relPath))).toString()).toEqual(
     (await readFile(resolve(dir, relPath))).toString(),
   );
