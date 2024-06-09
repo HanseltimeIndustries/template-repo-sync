@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.2.0...v1.3.0) (2024-06-09)
+
+
+### Features
+
+* support specifying the template branch ([54bad24](https://github.com/HanseltimeIndustries/template-repo-sync/commit/54bad24935bb8609617b8d30409aa8a47fc64139))
+
 # [1.2.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.1.0...v1.2.0) (2024-03-11)
 
 
