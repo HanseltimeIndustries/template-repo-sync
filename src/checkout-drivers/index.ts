@@ -1,2 +1,2 @@
-export * from './git-checkout'
-export * from './types'
+export * from "./git-checkout";
+export * from "./types";

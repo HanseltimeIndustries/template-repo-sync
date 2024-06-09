@@ -1,13 +1,13 @@
 /**
  * @deprecated - return the remote name in the CloneReturn
  */
-type CloneDir = string
+type CloneDir = string;
 
 export interface CloneReturn {
   /** The directory where the clone occurred - absolute path to avoid working dir issues */
-  dir: string
+  dir: string;
   /** The name of the remote for the particular technology that you used - passed to checkout drivers */
-  remoteName: string
+  remoteName: string;
 }
 
 /**

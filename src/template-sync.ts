@@ -23,7 +23,7 @@ export interface TemplateSyncOptions {
    * Optional Branch to check out - if not specified, this checks out the
    * default branch of the template repo
    */
-  branch?: string
+  branch?: string;
 
   /**
    * The directory for cloning our template repo into via the cloneDriver
@@ -90,17 +90,20 @@ export async function templateSync(
   const checkoutDriver = options.checkoutDriver ?? gitCheckout;
   const cloneReturn = await cloneDriver(options.tmpCloneDir, options.repoUrl);
 
-  const { dir: tempCloneDir, remoteName } = typeof cloneReturn === 'string' ? {
-    dir: cloneReturn,
-    remoteName: 'origin', // Default to this
-  } : cloneReturn
+  const { dir: tempCloneDir, remoteName } =
+    typeof cloneReturn === "string"
+      ? {
+          dir: cloneReturn,
+          remoteName: "origin", // Default to this
+        }
+      : cloneReturn;
 
   if (options.branch) {
     await checkoutDriver({
       tmpDir: tempCloneDir,
       remoteName,
       branch: options.branch,
-    })
+    });
   }
 
   // Get the clone Config

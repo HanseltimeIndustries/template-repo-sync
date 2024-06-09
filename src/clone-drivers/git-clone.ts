@@ -15,6 +15,6 @@ export async function gitClone(
 
   return {
     dir: resolve(tmpDir, CLONE_DIR),
-    remoteName: 'origin',
+    remoteName: "origin",
   };
 }

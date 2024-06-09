@@ -9,18 +9,18 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 const dummyCloneDriver = async () => {
   return {
     dir: resolve(TEST_FIXTURES_DIR, "template"),
-    remoteName: 'ourRemote',
-  }
+    remoteName: "ourRemote",
+  };
 };
 
-const dummyCheckoutDriver = jest.fn()
+const dummyCheckoutDriver = jest.fn();
 
 const downstreamDir = resolve(TEST_FIXTURES_DIR, "downstream");
 
 describe("templateSync", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    jest.resetAllMocks()
+    jest.resetAllMocks();
     tmpDir = await mkdtemp(tempDir());
     await copy(downstreamDir, tmpDir);
   });
@@ -55,7 +55,7 @@ describe("templateSync", () => {
     expect(existsSync(resolve(emptyTmpDir, "src/index.ts"))).toBeFalsy();
     expect(existsSync(resolve(emptyTmpDir, "src/custom-bin"))).toBeFalsy();
 
-    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled();
   });
   it("Checks out the branch and then appropriately merges", async () => {
     const emptyTmpDir = await mkdtemp(tempDir());
@@ -65,7 +65,7 @@ describe("templateSync", () => {
         cloneDriver: dummyCloneDriver,
         repoUrl: "not-important",
         repoDir: emptyTmpDir,
-        branch: 'new-template-test',
+        branch: "new-template-test",
         checkoutDriver: dummyCheckoutDriver,
       }),
     ).toEqual({
@@ -82,12 +82,12 @@ describe("templateSync", () => {
     // Expect the ignores to not be a problem
     expect(existsSync(resolve(emptyTmpDir, "src/index.ts"))).toBeFalsy();
     expect(existsSync(resolve(emptyTmpDir, "src/custom-bin"))).toBeFalsy();
-    const cloneInfo = await dummyCloneDriver()
+    const cloneInfo = await dummyCloneDriver();
     expect(dummyCheckoutDriver).toHaveBeenCalledWith({
       tmpDir: cloneInfo.dir,
       remoteName: cloneInfo.remoteName,
-      branch: 'new-template-test',
-    })
+      branch: "new-template-test",
+    });
   });
   it("appropriately merges according to just the templatesync config file in an existing repo", async () => {
     // Remove the local sync overrides
@@ -196,7 +196,7 @@ describe("templateSync", () => {
     // Expect the ignores to not be a problem
     await fileMatchDownstream(tmpDir, "src/index.ts");
     await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
-    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled();
   });
   it("appropriately merges according to the templatesync config file and the local config in an existing repo with afterRef", async () => {
     // Remove the local sync overrides
@@ -237,7 +237,7 @@ describe("templateSync", () => {
     await fileMatchDownstream(tmpDir, "src/index.ts");
     await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
     await fileMatchDownstream(tmpDir, "package.json");
-    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled();
   });
   it("updates the local templatesync with the current ref if updateAfterRef is true", async () => {
     // Remove the local sync overrides
@@ -295,7 +295,7 @@ describe("templateSync", () => {
       ...mockLocalConfig,
       afterRef: "newestSha",
     });
-    expect(dummyCheckoutDriver).not.toHaveBeenCalled()
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled();
   });
   it("creates the local templatesync with the current ref if updateAfterRef is true and no local template exists", async () => {
     // Remove the local sync overrides
@@ -363,7 +363,7 @@ describe("templateSync", () => {
       afterRef: "newestSha",
     });
   });
-  expect(dummyCheckoutDriver).not.toHaveBeenCalled()
+  expect(dummyCheckoutDriver).not.toHaveBeenCalled();
 });
 
 // helper
