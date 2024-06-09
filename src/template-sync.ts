@@ -11,9 +11,19 @@ import { gitCurrentRef } from "./ref-drivers";
 import { TemplateRefDriverFn } from "./ref-drivers/types";
 import { inferJSONIndent } from "./formatting";
 import * as commentJSON from "comment-json";
+import { TemplateCheckoutDriverFn, gitCheckout } from "./checkout-drivers";
 
 export interface TemplateSyncOptions {
+  /**
+   * This is the url of the template repo
+   */
   repoUrl: string;
+
+  /**
+   * Optional Branch to check out - if not specified, this checks out the
+   * default branch of the template repo
+   */
+  branch?: string;
 
   /**
    * The directory for cloning our template repo into via the cloneDriver
@@ -45,6 +55,11 @@ export interface TemplateSyncOptions {
    * Defaults to using git current ref
    */
   currentRefDriver?: TemplateRefDriverFn;
+
+  /**
+   * Defaults to using git checkout driver
+   */
+  checkoutDriver?: TemplateCheckoutDriverFn;
 }
 
 export interface TemplateSyncReturn {
@@ -72,7 +87,24 @@ export async function templateSync(
   const cloneDriver = options.cloneDriver ?? gitClone;
   const diffDriver = options.diffDriver ?? gitDiff;
   const currentRefDriver = options.currentRefDriver ?? gitCurrentRef;
-  const tempCloneDir = await cloneDriver(options.tmpCloneDir, options.repoUrl);
+  const checkoutDriver = options.checkoutDriver ?? gitCheckout;
+  const cloneReturn = await cloneDriver(options.tmpCloneDir, options.repoUrl);
+
+  const { dir: tempCloneDir, remoteName } =
+    typeof cloneReturn === "string"
+      ? {
+          dir: cloneReturn,
+          remoteName: "origin", // Default to this
+        }
+      : cloneReturn;
+
+  if (options.branch) {
+    await checkoutDriver({
+      tmpDir: tempCloneDir,
+      remoteName,
+      branch: options.branch,
+    });
+  }
 
   // Get the clone Config
   const cloneConfigPath = join(tempCloneDir, `${TEMPLATE_SYNC_CONFIG}.json`);
