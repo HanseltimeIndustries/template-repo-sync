@@ -55,4 +55,15 @@ describe("gitCheckout", () => {
         }),
     ).rejects.toThrow();
   });
+  it("does not throw if the branch was the default", async () => {
+    await gitCheckout({
+      tmpDir: tmpRepoDir,
+      remoteName: "origin",
+      branch: "master", // We set this in the gitDir
+    });
+
+    expect(readFileSync(join(tmpRepoDir, "README.md")).toString()).toContain(
+      "# This is the master branch",
+    );
+  });
 });
