@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.3.0...v1.3.1) (2024-06-09)
+
+
+### Bug Fixes
+
+* skipping checkout default is specified ([ad7ba7d](https://github.com/HanseltimeIndustries/template-repo-sync/commit/ad7ba7dc795883f813f70ed2e9140ac6a9030845))
+
 # [1.3.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.2.0...v1.3.0) (2024-06-09)
 
 
