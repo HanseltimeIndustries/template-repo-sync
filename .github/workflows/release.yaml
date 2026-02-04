@@ -34,6 +34,7 @@ jobs:
           node-version: 24.x
           cache: "npm"
           cache-dependency-path: package-lock.json
+          registry-url: "https://registry.npmjs.org"
       - name: Install
         run: npm ci
       - name: Build
@@ -41,5 +42,4 @@ jobs:
       - name: Release
         run: npm run release
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
