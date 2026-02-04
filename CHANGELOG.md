@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.0...v2.0.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* trigger new release ([8a60867](https://github.com/HanseltimeIndustries/template-repo-sync/commit/8a60867539b35222e5074cfccab716f01c8d613d))
+
 # [2.0.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.3.1...v2.0.0) (2026-02-04)
 
 
