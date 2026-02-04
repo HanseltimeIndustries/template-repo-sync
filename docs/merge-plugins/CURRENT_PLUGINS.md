@@ -1,6 +1,6 @@
 # Current Merge Plugins
 
-This document lists all merge plugins that are provided provided as defaults for certain file extensions.
+This document lists all merge plugins that are provided as defaults for certain file extensions.
 These should be found in the [plugins folder](src/plugins)
 
 - [Current Merge Plugins](#current-merge-plugins)
@@ -16,6 +16,8 @@ These should be found in the [plugins folder](src/plugins)
 ## Json Merge Plugin
 
 The json merge plugin allows you to configure jsonpath based merges on any .json file.
+
+Plugin Field Name: `_json`
 
 ## Configuration Options:
 
@@ -84,8 +86,6 @@ interface Options {
 ```
 
 #### Example
-
-This
 
 ```json
 {

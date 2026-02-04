@@ -42,7 +42,7 @@ describe("mergeFile", () => {
         tempCloneDir: testTemplateDir,
         localTemplateSyncConfig: {
           ignore: ["**/package.json"],
-          merge: {},
+          merge: [],
         },
         templateSyncConfig: {
           ignore: ["**/*.txt"],
@@ -85,21 +85,18 @@ describe("mergeFile", () => {
         },
         templateSyncConfig: {
           ignore: ["**/*.txt"],
-          merge: {
-            ".json": {
-              // no plugins
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: "merge-current",
-                },
-                {
-                  glob: "**/package.json",
-                  options: "merge-template",
-                },
-              ],
+          merge: [
+            {
+              glob: "**/package.json",
+              options: "merge-current",
+              plugin: "_json",
             },
-          },
+            {
+              glob: "**/package.json",
+              options: "merge-template",
+              plugin: "_json",
+            },
+          ],
         },
       }),
     ).toEqual({
@@ -140,21 +137,13 @@ describe("mergeFile", () => {
         },
         templateSyncConfig: {
           ignore: ["**/*.txt"],
-          merge: {
-            ".json": {
-              // no plugins
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: "merge-template",
-                },
-                {
-                  glob: "**/package.json",
-                  options: "merge-current",
-                },
-              ],
+          merge: [
+            {
+              glob: "**/package.json",
+              options: "merge-template",
+              plugin: "_json",
             },
-          },
+          ],
         },
       }),
     ).toEqual({
@@ -192,45 +181,34 @@ describe("mergeFile", () => {
         tempCloneDir: testTemplateDir,
         localTemplateSyncConfig: {
           ignore: [],
-          merge: {
-            ".json": {
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: {
-                    paths: [
-                      // Do not touch huh
-                      ["$.dependencies.huh", "merge-current"],
-                    ],
-                  },
-                },
-              ],
+          merge: [
+            {
+              plugin: "_json",
+              glob: "**/package.json",
+              options: {
+                paths: [
+                  // Do not touch huh
+                  ["$.dependencies.huh", "merge-current"],
+                ],
+              },
             },
-          },
+          ],
         },
         templateSyncConfig: {
           ignore: ["**/*.txt"],
-          merge: {
-            ".json": {
-              // no plugins
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: {
-                    missingIsDelete: true,
-                    paths: [
-                      // Merge all template dependencies
-                      ["$.dependencies", "merge-template"],
-                    ],
-                  } as JsonFileMergeOptions,
-                },
-                {
-                  glob: "**/package.json",
-                  options: "merge-current",
-                },
-              ],
+          merge: [
+            {
+              glob: "**/package.json",
+              plugin: "_json",
+              options: {
+                missingIsDelete: true,
+                paths: [
+                  // Merge all template dependencies
+                  ["$.dependencies", "merge-template"],
+                ],
+              } as JsonFileMergeOptions,
             },
-          },
+          ],
         },
       }),
     ).toEqual({
@@ -281,47 +259,34 @@ describe("mergeFile", () => {
         tempCloneDir: testTemplateDir,
         localTemplateSyncConfig: {
           ignore: [],
-          merge: {
-            ".json": {
-              // simulates a "node" plugin since we're pulling from the current context
+          merge: [
+            {
               plugin: "../test-fixtures/dummy-plugin.js",
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: {
-                    paths: [
-                      // Do not touch huh
-                      ["$.dependencies.huh", "merge-current"],
-                    ],
-                  },
-                },
-              ],
+              options: {
+                paths: [
+                  // Do not touch huh
+                  ["$.dependencies.huh", "merge-current"],
+                ],
+              },
+              glob: "**/package.json",
             },
-          },
+          ],
         },
         templateSyncConfig: {
           ignore: ["**/*.txt"],
-          merge: {
-            ".json": {
-              // no plugins
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: {
-                    missingIsDelete: true,
-                    paths: [
-                      // Merge all template dependencies
-                      ["$.dependencies", "merge-template"],
-                    ],
-                  } as JsonFileMergeOptions,
-                },
-                {
-                  glob: "**/package.json",
-                  options: "merge-current",
-                },
-              ],
+          merge: [
+            {
+              plugin: "_json",
+              glob: "**/package.json",
+              options: {
+                missingIsDelete: true,
+                paths: [
+                  // Merge all template dependencies
+                  ["$.dependencies", "merge-template"],
+                ],
+              } as JsonFileMergeOptions,
             },
-          },
+          ],
         },
       }),
     ).toEqual({
@@ -366,54 +331,62 @@ describe("mergeFile", () => {
       tested: true,
     });
   });
-  it("[inverse] applies default [.json] and custom merge for local with sync plugin and then local override", async () => {
+  it("[inverse] applies builtin _json and custom merge for local with sync plugin and then local override", async () => {
     expect(
       await mergeFile("package.json", {
         cwd: tmpDir,
         tempCloneDir: testTemplateDir,
         localTemplateSyncConfig: {
           ignore: [],
-          merge: {
-            ".json": {
-              // This is a relative path to ht
+          merge: [
+            {
+              glob: "**/package.json",
               plugin: "plugins/custom-plugin.js",
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: {
-                    paths: [
-                      // Do not touch huh
-                      ["$.dependencies.huh", "merge-current"],
-                    ],
-                  },
-                },
-              ],
+              options: {
+                paths: [
+                  // Do not touch huh
+                  ["$.dependencies.huh", "merge-current"],
+                ],
+              },
             },
-          },
+          ],
         },
         templateSyncConfig: {
           ignore: ["**/*.txt"],
-          merge: {
-            ".json": {
-              // no plugins
-              rules: [
-                {
-                  glob: "**/package.json",
-                  options: {
-                    missingIsDelete: true,
-                    paths: [
-                      // Merge all template dependencies
-                      ["$.dependencies", "merge-template"],
-                    ],
-                  } as JsonFileMergeOptions,
-                },
-                {
-                  glob: "**/package.json",
-                  options: "merge-current",
-                },
-              ],
+          merge: [
+            {
+              glob: "**/package.json",
+              // TODO - we need to handle the weird implicit case I added here.  It's dumb
+              options: {
+                missingIsDelete: true,
+                paths: [
+                  // Merge all template dependencies
+                  ["$.dependencies", "merge-template"],
+                ],
+              } as JsonFileMergeOptions,
+              plugin: "_json",
             },
-          },
+          ],
+          //   ".json": {
+          //     // no plugins
+          //     rules: [
+          //       {
+          //         glob: "**/package.json",
+          //         options: {
+          //           missingIsDelete: true,
+          //           paths: [
+          //             // Merge all template dependencies
+          //             ["$.dependencies", "merge-template"],
+          //           ],
+          //         } as JsonFileMergeOptions,
+          //       },
+          //       {
+          //         glob: "**/package.json",
+          //         options: "merge-current",
+          //       },
+          //     ],
+          //   },
+          // },
         },
       }),
     ).toEqual({
