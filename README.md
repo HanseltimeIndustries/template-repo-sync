@@ -13,15 +13,17 @@ best practice development patterns, then we naturally want to have a way to allo
 changes, while also having control over things that may be specifically changed due to their need to support something beyond the
 orgnaization standard.
 
+<!-- Created with Markdown All In One VsCode Entension, rerun to update -->
+
 - [Template Sync](#template-sync)
 - [How to use this](#how-to-use-this)
   - [Config file](#config-file)
     - [File format](#file-format)
     - [Example 1 - Using a custom plugin](#example-1---using-a-custom-plugin)
     - [Example 2 - Using a custom plugin for some paths](#example-2---using-a-custom-plugin-for-some-paths)
+    - [Example 3 - First Rule precedence](#example-3---first-rule-precedence)
   - [From SHA/Tag directive](#from-shatag-directive)
   - [Programmatic API](#programmatic-api)
-  <!-- Created with Markdown All In One VsCode Entension, rerun to update -->
 
 # How to use this
 
@@ -33,7 +35,7 @@ for those who would like to implement the same calls in another CI/CD structure.
 There are two types of config files that you can create:
 
 - `templatesync.config` in the template repo (this is for the template maintainer to specify how they would expect a roll out
-  to update and for them to exclude anything that is more of an example than a standard (for instance, a hellow world placeholder))
+  to update and for them to exclude anything that is more of an example than a standard (for instance, a hello world placeholder))
 
 - `templatesync.local.config` in the repo that cloned the template. This is meant for the repo maintainers to have the ability to avoid
   or customize updates between the template repo in the event that they have deviated purposefully from it.
@@ -57,21 +59,31 @@ export interface Config {
   /**
    * If there is no merge config, then we will always just overwrite the file for the diff
    */
-  merge: {
+  merge: [
     /**
-     * .json file merge overrides.  Keep in mind,
+     * The first merge rule that matches a file will be applied.
      */
-    ".json": {
-      // You can add a merge plugin for extensions that we don't natively support
-      mergePlugin: string;
+    {
       /**
-       * A list of file globs for json files that can have custom rules applied
-       *
-       * The first matching glob will be applied so make sure to put your defaults last
+       * A string or list of strings that would be used by micromatch
+       * against the file paths
        */
-      [fileGlobs: string]: JsonFileMerge;
-    }[];
-  };
+      glob: string | string[];
+      /**
+       * This could be a built-in merge plugin from this library
+       *  i.e. "_json"
+       *
+       * It can also be an npm package or a path to a local file with
+       * a merge plugin that matches the interface
+       */
+      plugin: string;
+      /**
+       * This is an object of options that correspond to the plugin
+       * you specified
+       */
+      options: any;
+    },
+  ];
 }
 ```
 
@@ -83,14 +95,15 @@ in the local repo will be merged using the plugin we specified.
 
 ```typescript
 {
-
-    merge: {
-        ".ini": {
-            // If you are running under pacakge manager like yarn or npm,
-            // you can provide a valid pacakge or .js fil from your package to run
-            plugin: 'my-installed-npm-package',
-        }
-    }
+  merge: [
+    {
+      // For all .ini packages
+      glob: "**/*.ini",
+      // If you are running under package manager like yarn or npm,
+      // you can provide a valid pacakge or .js fil from your package to run
+      plugin: "my-installed-npm-package",
+    },
+  ];
 }
 ```
 
@@ -102,24 +115,51 @@ files, only the ones in custom-configs/ will use this merge operator.
 
 ```typescript
 {
-
-    merge: {
-        ".ini": {
-            // If you are running under pacakge manager like yarn or npm,
-            // you can provide a valid pacakge or .js fil from your package to run
-            plugin: 'my-installed-npm-package',
-            rule: [
-                {
-                    glob: 'custom-configs/**',
-                    options: {
-                        myPluginParam: 'some parameter',
-                    }
-                }
-            ]
-        }
-    }
+  merge: [
+    {
+      // For all .ini packages
+      glob: "custom-configs/**",
+      // If you are running under package manager like yarn or npm,
+      // you can provide a valid pacakge or .js fil from your package to run
+      plugin: "my-installed-npm-package",
+      options: {
+        myPluginParam: "some parameter",
+      },
+    },
+  ];
 }
 ```
+
+### Example 3 - First Rule precedence
+
+If you have multiple merge rules that would match a file. The first and only the first rule that matches will be applied.
+
+```typescript
+{
+  merge: [
+    {
+      // For all .ini packages
+      glob: "custom-configs/**",
+      // If you are running under package manager like yarn or npm,
+      // you can provide a valid pacakge or .js fil from your package to run
+      plugin: "my-installed-npm-package",
+      options: {
+        myPluginParam: "some parameter",
+      },
+    },
+    {
+      // For all other .ini packages
+      glob: "**/*.ini",
+      // If you are running under package manager like yarn or npm,
+      // you can provide a valid pacakge or .js fil from your package to run
+      plugin: "my-installed-npm-package",
+    },
+  ];
+}
+```
+
+Note: if you need to do the equivalent of 2 merge plugins for a file, you can use a custom plugin
+that would call both plugins!
 
 ## From SHA/Tag directive
 

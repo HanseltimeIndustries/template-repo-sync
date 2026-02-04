@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.3.1...v2.0.0) (2026-02-04)
+
+
+### Features
+
+* switch to multiple plugins and globs for merge config ([d419c90](https://github.com/HanseltimeIndustries/template-repo-sync/commit/d419c90b1f5e4fc9c8e8b973f1a43bb709267a4a))
+
+
+### BREAKING CHANGES
+
+* The merge field of config is is now an array of plugin configs instead of a map with a single extension
+
 ## [1.3.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v1.3.0...v1.3.1) (2024-06-09)
 
 

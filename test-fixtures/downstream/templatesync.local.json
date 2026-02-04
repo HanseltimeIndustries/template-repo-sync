@@ -1,14 +1,10 @@
 {
   "ignore": ["custom-bin/**"],
-  "merge": {
-    ".json": {
+  "merge": [
+    {
+      "glob": "package.json",
       "plugin": "plugins/custom-plugin.js",
-      "rules": [
-        {
-          "glob": "package.json",
-          "options": {}
-        }
-      ]
+      "options": {}
     }
-  }
+  ]
 }

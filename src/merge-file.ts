@@ -51,66 +51,57 @@ export async function mergeFile(
   const filePath = join(cwd, relPath);
   const templatePath = join(tempCloneDir, relPath);
 
-  const mergeConfig = templateSyncConfig.merge?.[ext];
-  const localMergeConfig = localTemplateSyncConfig.merge?.[ext];
+  const mergeConfig = templateSyncConfig.merge?.find((mergeConfig) =>
+    isMatch(relPath, mergeConfig.glob),
+  );
+  const localMergeConfig = localTemplateSyncConfig.merge?.find((mergeConfig) =>
+    isMatch(relPath, mergeConfig.glob),
+  );
 
-  // Either write the merge or write
+  const mergeHandler = mergeConfig
+    ? await loadPlugin(mergeConfig, tempCloneDir)
+    : undefined;
+  const localMergeHandler = localMergeConfig
+    ? await loadPlugin(localMergeConfig, cwd)
+    : undefined;
+
+  // Either write the merge or write the file
   let fileContents: string;
   const localChanges: Change[] = [];
-  if (existsSync(filePath) && (mergeConfig || localMergeConfig)) {
+  if (existsSync(filePath) && (mergeHandler || localMergeHandler)) {
     const originalCurrentFile = (await readFile(filePath)).toString();
-    if (mergeConfig) {
-      // Apply the template's most recent merges
-      const handler = await loadPlugin(mergeConfig, ext, tempCloneDir);
-
-      const mergeOptions = mergeConfig.rules.find((rule) => {
-        return isMatch(relPath, rule.glob);
-      });
-
-      if (mergeOptions) {
-        fileContents = await safeMerge(
-          handler,
-          mergeConfig.plugin ?? `default for ${ext}`,
-          originalCurrentFile,
-          (await readFile(templatePath)).toString(),
-          {
-            relFilePath: relPath,
-            mergeArguments: mergeOptions.options,
-            isLocalOptions: true,
-          },
-        );
-      } else {
-        // Apply overwrite if we didn't set up merge
-        fileContents = (await readFile(templatePath)).toString();
-      }
+    if (mergeHandler) {
+      fileContents = await safeMerge(
+        mergeHandler,
+        mergeConfig?.plugin ?? `default for ${ext}`,
+        originalCurrentFile,
+        (await readFile(templatePath)).toString(),
+        {
+          relFilePath: relPath,
+          mergeArguments: mergeConfig?.options ?? {},
+          isLocalOptions: false,
+        },
+      );
     } else {
       // Apply overwrite if we didn't set up merge
       fileContents = (await readFile(templatePath)).toString();
     }
 
     // We apply the localMerge Config to the fileContent output by the template merge
-    if (localMergeConfig) {
-      const handler = await loadPlugin(localMergeConfig, ext, cwd);
-
-      const mergeOptions = localMergeConfig.rules.find((rule) => {
-        return isMatch(relPath, rule.glob);
-      });
-
-      if (mergeOptions) {
-        const localContents = await safeMerge(
-          handler,
-          localMergeConfig.plugin ?? `default for ${ext}`,
-          originalCurrentFile,
-          fileContents,
-          {
-            relFilePath: relPath,
-            mergeArguments: mergeOptions.options,
-            isLocalOptions: true,
-          },
-        );
-        localChanges.push(...diffLines(fileContents, localContents));
-        fileContents = localContents;
-      }
+    if (localMergeHandler) {
+      const localContents = await safeMerge(
+        localMergeHandler,
+        localMergeConfig?.plugin ?? `default for ${ext}`,
+        originalCurrentFile,
+        fileContents,
+        {
+          relFilePath: relPath,
+          mergeArguments: localMergeConfig?.options ?? {},
+          isLocalOptions: true,
+        },
+      );
+      localChanges.push(...diffLines(fileContents, localContents));
+      fileContents = localContents;
     }
   } else {
     // Just perform simple overwrite
