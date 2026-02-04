@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.1...v2.0.2) (2026-02-04)
+
+
+### Bug Fixes
+
+* triger another release due to npm issues ([b6bc9ac](https://github.com/HanseltimeIndustries/template-repo-sync/commit/b6bc9ace83165906707a95ee3aa3a89082cf4d4c))
+
 ## [2.0.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.0...v2.0.1) (2026-02-04)
 
 
