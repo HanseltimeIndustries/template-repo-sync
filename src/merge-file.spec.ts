@@ -143,6 +143,11 @@ describe("mergeFile", () => {
               options: "merge-template",
               plugin: "_json",
             },
+            {
+              glob: "**/package.json",
+              options: "merge-current",
+              plugin: "_json",
+            },
           ],
         },
       }),
