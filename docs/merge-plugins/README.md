@@ -26,27 +26,23 @@ set of boilerplate for an npm package, you would probably provide an example pac
 
 In this scenario, we expect the template user to declare their own `name` and `description`, and add their own
 `scripts` and `devDependencies`. However, we are hoping to make sure that the publish method and and its
-our-artifact-package are kept up-to-date on syncs. Because of this, we would make use of the default json merge
-plugin that is built-in with this library:
+our-artifact-package are kept up-to-date on syncs. Because of this, we would make use of the built-in json merge
+plugin `_json` that is provided with this library:
 
 ```json
 {
-  "merge": {
-    ".json": {
-      // This uses the default plugin for json merges
-      "rules": [
-        {
-          "glob": "package.json",
-          "options": {
-            "paths": [
-              ["$.scripts.publish", "merge-template"], // Any changes to publish are so critical that we want them to sync
-              ["$.devDependencies", "merge-template"] // Always ensure dev dependency versions for our scripts are updated
-            ]
-          }
-        }
-      ]
+  "merge": [
+    {
+      "glob": "package.json",
+      "plugin": "_json",
+      "options": {
+        "paths": [
+          ["$.scripts.publish", "merge-template"], // Any changes to publish are so critical that we want them to sync
+          ["$.devDependencies", "merge-template"] // Always ensure dev dependency versions for our scripts are updated
+        ]
+      }
     }
-  }
+  ]
 }
 ```
 
@@ -61,21 +57,15 @@ config file, they can specify their own merge configuration for the package.json
 
 ```json
 {
-  "merge": {
-    ".json": {
-      // This uses the default plugin for json merges
-      "rules": [
-        {
-          "glob": "package.json",
-          "options": {
-            "paths": [
-              ["$.devDependencies", "merge-template"] // Always ensure dev dependency versions for our scripts are updated
-            ]
-          }
-        }
+  "merge": [
+    {
+      "glob": "package.json",
+      "plugin": "_json",
+      "paths": [
+        ["$.devDependencies", "merge-template"] // Always ensure dev dependency versions for our scripts are updated
       ]
     }
-  }
+  ]
 }
 ```
 

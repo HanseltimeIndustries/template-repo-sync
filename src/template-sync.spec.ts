@@ -150,18 +150,13 @@ describe("templateSync", () => {
           // We don't have a need for this in here, but it's an example of keeping things cleaner for our custom plugins
           "plugins/**",
         ],
-        merge: {
-          ".json": {
-            // Let's nuke package.json with this plugin
+        merge: [
+          {
+            glob: "package.json",
             plugin: "plugins/custom-plugin.js",
-            rules: [
-              {
-                glob: "package.json",
-                options: {},
-              },
-            ],
+            options: {},
           },
-        },
+        ],
       }),
     );
 

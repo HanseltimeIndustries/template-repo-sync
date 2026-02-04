@@ -5,7 +5,8 @@ export const defaultExtensionMap = {
   ".json": {
     merge: jsonMerge,
     validate: jsonValidate,
+    builtinName: "_json",
   },
 } as {
-  [ext: string]: MergePlugin<JsonFileMergeOptions>;
+  [ext: string]: MergePlugin<JsonFileMergeOptions> & { builtinName: string };
 };

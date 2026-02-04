@@ -1,8 +1,9 @@
 # Plugin Development
 
 - [Plugin Development](#plugin-development)
-  - [Example: hello \<world\>](#example-hello-world) - [Example one: local file](#example-one-local-file) - [Example two: npm package](#example-two-npm-package)
-  <!-- Created with Markdown All In One VsCode Extension -->
+  - [Example: hello \<world\>](#example-hello-world)
+    - [Example one: local file](#example-one-local-file)
+    - [Example two: npm package](#example-two-npm-package)
 
 The templatesync.json and templatesync.local.config files make use of a `"merge"` property where you can
 customize the baseline behavior of ignore or overwrite from template.
@@ -89,19 +90,15 @@ With all of that set up, as long as we have the package available to the pacakge
 
 ```json
 {
-  "merge": {
-    ".txt": {
-      "plugin": "dist/hello-plugin.js", // Note, we make it point to the compiled .js so you will need to build and commit the file
-      "rules": [
-        {
-          "glob": "**/*",
-          "options": {
-            "world": "chad"
-          }
-        }
-      ]
+  "merge": [
+    {
+      "glob": "**/*.txt",
+      "plugin": "dist/hello-plugin.js",
+      "options": {
+        "world": "chad"
+      }
     }
-  }
+  ]
 }
 ```
 
@@ -112,18 +109,14 @@ simply reference the package (assuming that it exposes the required functions as
 
 ```json
 {
-  "merge": {
-    ".txt": {
+  "merge": [
+    {
+      "glob": "**/*.txt",
       "plugin": "@myscope/hello-merge",
-      "rules": [
-        {
-          "glob": "**/*",
-          "options": {
-            "world": "chad"
-          }
-        }
-      ]
+      "options": {
+        "world": "chad"
+      }
     }
-  }
+  ]
 }
 ```

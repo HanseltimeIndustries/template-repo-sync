@@ -37,14 +37,21 @@ type MergePluginOptions = JsonFileMergeOptions;
  */
 export interface MergeConfig<T> {
   /**
-   * The node module, available on the calling node context, that you want to run.
-   * If not provided, we try to use any built-in merge plugins.
+   * A glob or array of globs (using micromatch syntax) that selects the files that this applies to
+   * when merging
    */
-  plugin?: string;
+  glob: string | string[];
+  /**
+   * The node module, available on the calling node context, that you want to run.
+   * Built-in plugins can be specified via their built-in name (see documentation):
+   *
+   * Example: _json
+   */
+  plugin: string;
   /**
    * An array of first match file globs that will then call the plugin with the appropriate options
    */
-  rules: { glob: string; options: MergePluginOptions | T }[];
+  options: MergePluginOptions | T;
 }
 
 /**
@@ -55,9 +62,7 @@ export interface Config<T = unknown> {
   /**
    * If there is no merge config, then we will always just overwrite the file for the diff
    */
-  merge?: {
-    [fileExt: string]: MergeConfig<T>;
-  };
+  merge?: MergeConfig<T>[];
 }
 
 /**
@@ -74,9 +79,7 @@ export interface LocalConfig<T = unknown> {
   /**
    * If there is no merge config, then we will always just overwrite the file for the diff
    */
-  merge?: {
-    [fileExt: string]: MergeConfig<T>;
-  };
+  merge?: MergeConfig<T>[];
 }
 
 /**
