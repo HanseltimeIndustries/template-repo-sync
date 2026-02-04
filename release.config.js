@@ -19,7 +19,18 @@ module.exports = {
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
-    "@semantic-release/npm",
+    [
+      "@semantic-release/npm",
+      {
+        npmPublish: false, // We just use this to increment the versions since semantic-release doesn't handle OIDC well
+      },
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        publishCmd: "npm publish --access public",
+      },
+    ],
     [
       "@semantic-release/git",
       {
