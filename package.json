@@ -5,6 +5,10 @@
   "main": "lib/cjs/index.js",
   "types": "lib/cjs/index.d.ts",
   "module": "lib/esm/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HanseltimeIndustries/template-repo-sync.git"
+  },
   "scripts": {
     "format": "prettier . --write",
     "lint": "eslint .",
