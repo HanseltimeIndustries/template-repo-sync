@@ -39,12 +39,12 @@ jobs:
       - name: Build
         run: npm run build
       # IMPORTANT: remove any token-based auth config so npm can use OIDC
-      - name: Clear npm auth config (enable OIDC publish)
-        run: |
-          unset NPM_TOKEN
-          unset NODE_AUTH_TOKEN
-          rm -f .npmrc
-          rm -f ~/.npmrc
+      # - name: Clear npm auth config (enable OIDC publish)
+      #   run: |
+      #     unset NPM_TOKEN
+      #     unset NODE_AUTH_TOKEN
+      #     rm -f .npmrc
+      #     rm -f ~/.npmrc
       - name: Test Run
         run: |
           npm publish --access public
