@@ -38,17 +38,7 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
-      # IMPORTANT: remove any token-based auth config so npm can use OIDC
-      # - name: Clear npm auth config (enable OIDC publish)
-      #   run: |
-      #     unset NPM_TOKEN
-      #     unset NODE_AUTH_TOKEN
-      #     rm -f .npmrc
-      #     rm -f ~/.npmrc
-      - name: Test Run
-        run: |
-          npm publish --access public
-      # - name: Release
-      #   run: npm run release
-      #   env:
-      #     GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: Release
+        run: npm run release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
