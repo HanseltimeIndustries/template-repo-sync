@@ -34,7 +34,12 @@ jobs:
           node-version: 24.x
           cache: "npm"
           cache-dependency-path: package-lock.json
-          registry-url: https://registry.npmjs.org/
+
+      - name: Ensure npm supports Trusted Publishing
+        run: |
+          npm i -g npm@^11.5.1
+          npm --version
+          npm config set registry https://registry.npmjs.org/
       - name: Install
         run: npm ci
       - name: Build
@@ -46,7 +51,10 @@ jobs:
           unset NODE_AUTH_TOKEN
           rm -f .npmrc
           rm -f ~/.npmrc
-      - name: Release
-        run: npm run release
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: Test Run
+        run: |
+          npm publish --access public
+      # - name: Release
+      #   run: npm run release
+      #   env:
+      #     GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
