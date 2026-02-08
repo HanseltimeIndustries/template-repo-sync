@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.1.1...v2.1.2) (2026-02-08)
+
+
+### Bug Fixes
+
+* afterref was skipping template ignores ([270b926](https://github.com/HanseltimeIndustries/template-repo-sync/commit/270b926983ddc7070c2099cfa8fa507d1b527233))
+
 ## [2.1.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.1.0...v2.1.1) (2026-02-08)
 
 
