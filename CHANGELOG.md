@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.1.0...v2.1.1) (2026-02-08)
+
+
+### Bug Fixes
+
+* delete was not deleting the right file ([104e3ec](https://github.com/HanseltimeIndustries/template-repo-sync/commit/104e3ec8913c983f1d046bf19b197857e8016ff0))
+
 # [2.1.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.4...v2.1.0) (2026-02-08)
 
 
