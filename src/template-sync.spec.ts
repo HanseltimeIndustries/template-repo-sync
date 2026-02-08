@@ -256,7 +256,7 @@ describe("templateSync", () => {
     // We will only update the templated.ts
     const mockDiffDriver = jest.fn().mockImplementation(async () => ({
       added: ["src/templated.ts"],
-      modified: [],
+      modified: ["src/index.ts"], // Add index.ts so we make sure it is still ignored - due to a bug
       deleted: [],
     }));
     const mockCurrentRefDriver = jest
