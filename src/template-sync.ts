@@ -12,6 +12,7 @@ import { TemplateRefDriverFn } from "./ref-drivers/types";
 import { inferJSONIndent } from "./formatting";
 import * as commentJSON from "comment-json";
 import { TemplateCheckoutDriverFn, gitCheckout } from "./checkout-drivers";
+import { some } from "micromatch";
 
 export interface TemplateSyncOptions {
   /**
@@ -140,6 +141,17 @@ export async function templateSync(
       modified: [],
     };
   }
+
+  // Apply ignore filters
+  filesToSync.added = filesToSync.added.filter(
+    (f) => !some(f, templateSyncConfig.ignore),
+  );
+  filesToSync.modified = filesToSync.modified.filter(
+    (f) => !some(f, templateSyncConfig.ignore),
+  );
+  filesToSync.deleted = filesToSync.deleted.filter(
+    (f) => !some(f, templateSyncConfig.ignore),
+  );
 
   const localSkipFiles: string[] = [];
   const localFileChanges: {
