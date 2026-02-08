@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.3...v2.0.4) (2026-02-05)
+
+
+### Bug Fixes
+
+* leave semantic release out of npm publish ([9c0d9a3](https://github.com/HanseltimeIndustries/template-repo-sync/commit/9c0d9a389faf34c944640a5a3fc153b038e61b1d))
+
 ## [2.0.3](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.2...v2.0.3) (2026-02-05)
 
 
