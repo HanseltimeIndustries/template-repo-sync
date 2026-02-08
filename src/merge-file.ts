@@ -1,8 +1,8 @@
 import { isMatch, some } from "micromatch";
-import { Config, MergeContext, MergePlugin } from "./types";
+import { Config, FileOperation, MergeContext, MergePlugin } from "./types";
 import { extname, join } from "path";
 import { existsSync } from "fs";
-import { readFile } from "fs/promises";
+import { readFile, rm } from "fs/promises";
 import { loadPlugin } from "./load-plugin";
 import { Change, diffLines } from "diff";
 import { outputFile } from "fs-extra";
@@ -12,6 +12,7 @@ interface MergeFileOptions {
   templateSyncConfig: Config;
   tempCloneDir: string;
   cwd: string;
+  fileOperation: FileOperation;
 }
 
 interface MergeFileReturn {
@@ -50,6 +51,17 @@ export async function mergeFile(
   const ext = extname(relPath);
   const filePath = join(cwd, relPath);
   const templatePath = join(tempCloneDir, relPath);
+
+  // Unless there's a need, we remove files that were deleted and don't pass them to plugins yet
+  if (context.fileOperation === "deleted") {
+    if (existsSync(templatePath)) {
+      await rm(templatePath);
+      return {
+        ignoredDueToLocal: false,
+        localChanges: [],
+      };
+    }
+  }
 
   const mergeConfig = templateSyncConfig.merge?.find((mergeConfig) =>
     isMatch(relPath, mergeConfig.glob),

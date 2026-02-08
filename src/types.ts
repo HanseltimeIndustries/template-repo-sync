@@ -125,3 +125,5 @@ export interface MergePlugin<PluginOptions> {
    */
   validate(options: unknown): string[] | undefined;
 }
+
+export type FileOperation = "added" | "modified" | "deleted";

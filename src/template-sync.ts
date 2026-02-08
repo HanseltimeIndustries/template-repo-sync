@@ -1,12 +1,12 @@
 import { join } from "path";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { getAllFilesInDir } from "./match";
-import { Config, LocalConfig } from "./types";
+import { Config, FileOperation, LocalConfig } from "./types";
 import { mergeFile } from "./merge-file";
 import { gitClone } from "./clone-drivers/git-clone";
 import { Change } from "diff";
 import { TemplateCloneDriverFn } from "./clone-drivers";
-import { TemplateDiffDriverFn, gitDiff } from "./diff-drivers";
+import { DiffResult, TemplateDiffDriverFn, gitDiff } from "./diff-drivers";
 import { gitCurrentRef } from "./ref-drivers";
 import { TemplateRefDriverFn } from "./ref-drivers/types";
 import { inferJSONIndent } from "./formatting";
@@ -124,17 +124,21 @@ export async function templateSync(
       ) as unknown as LocalConfig)
     : { ignore: [] };
 
-  let filesToSync: string[];
+  let filesToSync: DiffResult;
   if (localTemplateSyncConfig.afterRef) {
     filesToSync = await diffDriver(
       tempCloneDir,
       localTemplateSyncConfig.afterRef,
     );
   } else {
-    filesToSync = getAllFilesInDir(tempCloneDir, [
-      ...templateSyncConfig.ignore,
-      ".git/**",
-    ]);
+    filesToSync = {
+      added: getAllFilesInDir(tempCloneDir, [
+        ...templateSyncConfig.ignore,
+        ".git/**",
+      ]),
+      deleted: [],
+      modified: [],
+    };
   }
 
   const localSkipFiles: string[] = [];
@@ -142,21 +146,27 @@ export async function templateSync(
     [filePath: string]: Change[];
   } = {};
 
-  await Promise.all(
-    filesToSync.map(async (f) => {
+  const fileSyncFactory = (op: FileOperation) => {
+    return async (f: string) => {
       const result = await mergeFile(f, {
         localTemplateSyncConfig,
         templateSyncConfig,
         tempCloneDir,
         cwd: options.repoDir,
+        fileOperation: op,
       });
       if (result.ignoredDueToLocal) {
         localSkipFiles.push(f);
       } else if (result?.localChanges && result.localChanges.length > 0) {
         localFileChanges[f] = result.localChanges;
       }
-    }),
-  );
+    };
+  };
+
+  // Added and modified have the same setup for now
+  await Promise.all(filesToSync.added.map(fileSyncFactory("added")));
+  await Promise.all(filesToSync.modified.map(fileSyncFactory("modified")));
+  await Promise.all(filesToSync.deleted.map(fileSyncFactory("deleted")));
 
   // apply after ref
   if (options.updateAfterRef) {

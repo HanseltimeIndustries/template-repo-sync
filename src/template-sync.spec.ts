@@ -209,9 +209,11 @@ describe("templateSync", () => {
     );
 
     // We will only update the templated.ts
-    const mockDiffDriver = jest
-      .fn()
-      .mockImplementation(async () => ["src/templated.ts"]);
+    const mockDiffDriver = jest.fn().mockImplementation(async () => ({
+      added: ["src/templated.ts"],
+      modified: [],
+      deleted: [],
+    }));
     const result = await templateSync({
       tmpCloneDir: "stubbed-by-driver",
       cloneDriver: dummyCloneDriver,
@@ -252,9 +254,11 @@ describe("templateSync", () => {
     );
 
     // We will only update the templated.ts
-    const mockDiffDriver = jest
-      .fn()
-      .mockImplementation(async () => ["src/templated.ts"]);
+    const mockDiffDriver = jest.fn().mockImplementation(async () => ({
+      added: ["src/templated.ts"],
+      modified: [],
+      deleted: [],
+    }));
     const mockCurrentRefDriver = jest
       .fn()
       .mockImplementation(async () => "newestSha");
@@ -297,9 +301,9 @@ describe("templateSync", () => {
     await rm(join(tmpDir, "templatesync.local.json"));
 
     // We will only update the templated.ts
-    const mockDiffDriver = jest
-      .fn()
-      .mockImplementation(async () => ["src/templated.ts"]);
+    const mockDiffDriver = jest.fn().mockImplementation(async () => ({
+      added: ["src/templated.ts"],
+    }));
     const mockCurrentRefDriver = jest
       .fn()
       .mockImplementation(async () => "newestSha");
