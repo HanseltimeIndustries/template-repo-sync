@@ -54,13 +54,13 @@ export async function mergeFile(
 
   // Unless there's a need, we remove files that were deleted and don't pass them to plugins yet
   if (context.fileOperation === "deleted") {
-    if (existsSync(templatePath)) {
-      await rm(templatePath);
-      return {
-        ignoredDueToLocal: false,
-        localChanges: [],
-      };
+    if (existsSync(filePath)) {
+      await rm(filePath);
     }
+    return {
+      ignoredDueToLocal: false,
+      localChanges: [],
+    };
   }
 
   const mergeConfig = templateSyncConfig.merge?.find((mergeConfig) =>

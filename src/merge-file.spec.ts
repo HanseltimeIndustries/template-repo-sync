@@ -11,19 +11,19 @@ const testDownstreamDir = resolve(TEST_FIXTURES_DIR, "downstream");
 
 describe("mergeFile", () => {
   let tmpDir: string;
-  let tmpTargetDir: string;
+  let tmpTemplateDir: string;
   beforeEach(async () => {
     tmpDir = await mkdtemp(tempDir());
     copySync(testDownstreamDir, tmpDir);
-    tmpTargetDir = await mkdtemp(tempDir());
-    copySync(testTemplateDir, tmpTargetDir);
+    tmpTemplateDir = await mkdtemp(tempDir());
+    copySync(testTemplateDir, tmpTemplateDir);
   });
   afterEach(async () => {
     await rm(tmpDir, {
       force: true,
       recursive: true,
     });
-    await rm(tmpTargetDir, {
+    await rm(tmpTemplateDir, {
       force: true,
       recursive: true,
     });
@@ -49,7 +49,7 @@ describe("mergeFile", () => {
       expect(
         await mergeFile("package.json", {
           cwd: tmpDir,
-          tempCloneDir: tmpTargetDir,
+          tempCloneDir: tmpTemplateDir,
           localTemplateSyncConfig: {
             ignore: ["**/package.json"],
             merge: [],
@@ -70,7 +70,7 @@ describe("mergeFile", () => {
       expect(
         await mergeFile("package.json", {
           cwd: tmpDir,
-          tempCloneDir: tmpTargetDir,
+          tempCloneDir: tmpTemplateDir,
           localTemplateSyncConfig: {
             ignore: [],
           },
@@ -86,7 +86,7 @@ describe("mergeFile", () => {
 
       // Ensure we overwrote
       expect(await readFile(join(tmpDir, "package.json"))).toEqual(
-        await readFile(join(tmpTargetDir, "package.json")),
+        await readFile(join(tmpTemplateDir, "package.json")),
       );
     },
   );
@@ -94,7 +94,7 @@ describe("mergeFile", () => {
     expect(
       await mergeFile("package.json", {
         cwd: tmpDir,
-        tempCloneDir: tmpTargetDir,
+        tempCloneDir: tmpTemplateDir,
         localTemplateSyncConfig: {
           ignore: [],
         },
@@ -109,7 +109,7 @@ describe("mergeFile", () => {
     });
 
     // Ensure we overwrote
-    expect(existsSync(join(tmpTargetDir, "package.json"))).toBeFalsy();
+    expect(existsSync(join(tmpDir, "package.json"))).toBeFalsy();
   });
 
   // TODO - this could change if there's a use case
@@ -117,7 +117,7 @@ describe("mergeFile", () => {
     expect(
       await mergeFile("package.json", {
         cwd: tmpDir,
-        tempCloneDir: tmpTargetDir,
+        tempCloneDir: tmpTemplateDir,
         localTemplateSyncConfig: {
           ignore: [],
           merge: [
@@ -157,7 +157,7 @@ describe("mergeFile", () => {
     });
 
     // Ensure we overwrote
-    expect(existsSync(join(tmpTargetDir, "package.json"))).toBeFalsy();
+    expect(existsSync(join(tmpDir, "package.json"))).toBeFalsy();
   });
 
   describe.each([["added" as FileOperation], ["modified" as FileOperation]])(
