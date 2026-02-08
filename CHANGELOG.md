@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.4...v2.1.0) (2026-02-08)
+
+
+### Features
+
+* add support for template repo file deletions ([dd5d732](https://github.com/HanseltimeIndustries/template-repo-sync/commit/dd5d7324e17a0c015a4fb1abd78c079eea58693d))
+
 ## [2.0.4](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.0.3...v2.0.4) (2026-02-05)
 
 
