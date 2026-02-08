@@ -53,6 +53,11 @@ jobs:
         run: |
           npm run lint
           npx prettier . --check
+      # Add git config user for some intgration testing
+      - name: setup git
+        run: |
+          git config --global user.name github-int-test
+          git config --global user.email github-int-test@github.com
       - name: testing
         run: |
           npm run test
