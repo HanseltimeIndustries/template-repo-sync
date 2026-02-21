@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.1.2...v2.2.0) (2026-02-21)
+
+
+### Features
+
+* add modified files output to track actual sync changes ([050ffd0](https://github.com/HanseltimeIndustries/template-repo-sync/commit/050ffd0ff74195943e60fc8dbf4354191959c0be))
+
 ## [2.1.2](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.1.1...v2.1.2) (2026-02-08)
 
 
