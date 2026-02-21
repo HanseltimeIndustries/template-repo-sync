@@ -23,6 +23,23 @@ ${result.localFileChanges[file].reduce((diffS, change) => {
 }, "")}
 \`\`\``;
 }, "")}
+
+## Files Modified (${result.modifiedFiles.total})
+
+Added:
+${result.modifiedFiles.added.reduce((s, f) => {
+  return `${s}\n- ${f}`;
+}, "")}
+
+Modified:
+${result.modifiedFiles.modified.reduce((s, f) => {
+  return `${s}\n- ${f}`;
+}, "")}
+
+Deleted:
+${result.modifiedFiles.deleted.reduce((s, f) => {
+  return `${s}\n- ${f}`;
+}, "")}
 `;
 }
 

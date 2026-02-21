@@ -77,6 +77,16 @@ export interface TemplateSyncReturn {
   localFileChanges: {
     [filePath: string]: Change[];
   };
+  /**
+   * A list of all files that are modified by this operation.  You can use total to quickly check if
+   * there was an actual meaningful change.
+   *
+   * Please note, ther may be localSkipfiles and total: 0, which indicates there were changes BUT the local template
+   * sync file rendered them meaningless.
+   */
+  modifiedFiles: DiffResult & {
+    total: number;
+  };
 }
 
 export const TEMPLATE_SYNC_CONFIG = "templatesync";
@@ -153,7 +163,7 @@ export async function templateSync(
     (f) => !some(f, templateSyncConfig.ignore),
   );
 
-  const localSkipFiles: string[] = [];
+  const localSkipFiles: Set<string> = new Set();
   const localFileChanges: {
     [filePath: string]: Change[];
   } = {};
@@ -168,7 +178,7 @@ export async function templateSync(
         fileOperation: op,
       });
       if (result.ignoredDueToLocal) {
-        localSkipFiles.push(f);
+        localSkipFiles.add(f);
       } else if (result?.localChanges && result.localChanges.length > 0) {
         localFileChanges[f] = result.localChanges;
       }
@@ -179,6 +189,21 @@ export async function templateSync(
   await Promise.all(filesToSync.added.map(fileSyncFactory("added")));
   await Promise.all(filesToSync.modified.map(fileSyncFactory("modified")));
   await Promise.all(filesToSync.deleted.map(fileSyncFactory("deleted")));
+
+  // Report the files that changed in general
+  const actualAdded = filesToSync.added.filter((f) => !localSkipFiles.has(f));
+  const actualModified = filesToSync.modified.filter(
+    (f) => !localSkipFiles.has(f),
+  );
+  const actualDeleted = filesToSync.deleted.filter(
+    (f) => !localSkipFiles.has(f),
+  );
+  const modifiedFiles = {
+    added: actualAdded,
+    modified: actualModified,
+    deleted: actualDeleted,
+    total: actualAdded.length + actualModified.length + actualDeleted.length,
+  };
 
   // apply after ref
   if (options.updateAfterRef) {
@@ -203,7 +228,8 @@ export async function templateSync(
   }
 
   return {
-    localSkipFiles,
+    localSkipFiles: Array.from(localSkipFiles),
     localFileChanges,
+    modifiedFiles: modifiedFiles,
   };
 }

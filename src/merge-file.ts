@@ -22,7 +22,8 @@ interface MergeFileReturn {
   ignoredDueToLocal: boolean;
   /**
    * Only available if the file wasn't ignored, this is a list of lineDiffs
-   * from the the diff library that were applied to what would've been removed
+   * from the diff library that were applied to what would've been changed by
+   * the base templatesync repo
    */
   localChanges?: Change[];
 }

@@ -44,6 +44,18 @@ describe("templateSync", () => {
       // Expect no changes since there was no local sync file
       localSkipFiles: [],
       localFileChanges: {},
+      modifiedFiles: {
+        added: [
+          "package.json",
+          "src/index.js",
+          "src/templated.js",
+          "src/templated.ts",
+          "templatesync.json",
+        ],
+        deleted: [],
+        modified: [],
+        total: 5,
+      },
     });
 
     // Verify the files
@@ -72,6 +84,18 @@ describe("templateSync", () => {
       // Expect no changes since there was no local sync file
       localSkipFiles: [],
       localFileChanges: {},
+      modifiedFiles: {
+        added: [
+          "package.json",
+          "src/index.js",
+          "src/templated.js",
+          "src/templated.ts",
+          "templatesync.json",
+        ],
+        deleted: [],
+        modified: [],
+        total: 5,
+      },
     });
 
     // Verify the files
@@ -175,6 +199,18 @@ describe("templateSync", () => {
         "package.json": expect.arrayContaining([]),
       }),
     );
+    // Make sure the result captures the changes
+    expect(result.modifiedFiles).toEqual({
+      added: [
+        "package.json",
+        "src/index.js",
+        "src/templated.js",
+        "templatesync.json",
+      ],
+      deleted: [],
+      modified: [],
+      total: 4,
+    });
 
     // Verify the files
     await fileMatchTemplate(tmpDir, "templatesync.json");
@@ -273,7 +309,7 @@ describe("templateSync", () => {
       checkoutDriver: dummyCheckoutDriver,
     });
 
-    // since there was no override for this file, not changes from the local file
+    // since there was no override for this file, no changes from the local file
     expect(result.localFileChanges).toEqual(expect.objectContaining({}));
 
     // Verify the files
@@ -318,7 +354,7 @@ describe("templateSync", () => {
       checkoutDriver: dummyCheckoutDriver,
     });
 
-    // since there was no override for this file, not changes from the local file
+    // since there was no override for this file, no changes from the local file
     expect(result.localFileChanges).toEqual(expect.objectContaining({}));
 
     // Verify the files
