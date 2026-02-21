@@ -18,5 +18,22 @@ package.json
 -your thang
 
 \`\`\`
+
+## Files Modified (6)
+
+Added:
+
+- src/something.ts
+- new_settings.toml
+
+Modified:
+
+- something.txt
+- .env
+
+Deleted:
+
+- TODO.md
+- throwaway.ts
 "
 `;

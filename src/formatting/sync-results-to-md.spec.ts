@@ -19,6 +19,12 @@ describe("syncResultsToMd", () => {
             },
           ],
         },
+        modifiedFiles: {
+          added: ["src/something.ts", "new_settings.toml"],
+          deleted: ["TODO.md", "throwaway.ts"],
+          modified: ["something.txt", ".env"],
+          total: 6,
+        },
       }),
     ).toMatchSnapshot();
   });
