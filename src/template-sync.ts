@@ -125,10 +125,8 @@ export async function templateSync(
       ) as unknown as Config)
     : { ignore: [] };
 
-  const localConfigPath = join(
-    options.repoDir,
-    `${TEMPLATE_SYNC_LOCAL_CONFIG}.json`,
-  );
+  const localConfigFile = `${TEMPLATE_SYNC_LOCAL_CONFIG}.json`;
+  const localConfigPath = join(options.repoDir, localConfigFile);
   const localTemplateSyncConfig: LocalConfig = existsSync(localConfigPath)
     ? (commentJSON.parse(
         readFileSync(localConfigPath).toString(),
@@ -136,7 +134,23 @@ export async function templateSync(
     : { ignore: [] };
 
   let filesToSync: DiffResult;
+  const ref = await currentRefDriver({
+    rootDir: tempCloneDir,
+  });
   if (localTemplateSyncConfig.afterRef) {
+    if (ref === localTemplateSyncConfig.afterRef) {
+      // short circuit if the refs match
+      return {
+        localSkipFiles: [],
+        localFileChanges: {},
+        modifiedFiles: {
+          added: [],
+          modified: [],
+          deleted: [],
+          total: 0,
+        },
+      };
+    }
     filesToSync = await diffDriver(
       tempCloneDir,
       localTemplateSyncConfig.afterRef,
@@ -202,7 +216,6 @@ export async function templateSync(
     added: actualAdded,
     modified: actualModified,
     deleted: actualDeleted,
-    total: actualAdded.length + actualModified.length + actualDeleted.length,
   };
 
   // apply after ref
@@ -219,17 +232,25 @@ export async function templateSync(
         localConfigPath,
         commentJSON.stringify(config, null, inferJSONIndent(configStr)),
       );
+      modifiedFiles.modified.push(localConfigFile);
     } else {
       writeFileSync(
         localConfigPath,
         commentJSON.stringify({ afterRef: ref }, null, 4),
       );
+      modifiedFiles.added.push(localConfigFile);
     }
   }
 
   return {
     localSkipFiles: Array.from(localSkipFiles),
     localFileChanges,
-    modifiedFiles: modifiedFiles,
+    modifiedFiles: {
+      ...modifiedFiles,
+      total:
+        modifiedFiles.added.length +
+        modifiedFiles.deleted.length +
+        modifiedFiles.modified.length,
+    },
   };
 }
