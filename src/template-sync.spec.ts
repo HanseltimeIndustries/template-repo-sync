@@ -292,7 +292,7 @@ describe("templateSync", () => {
     // We will only update the templated.ts
     const mockDiffDriver = jest.fn().mockImplementation(async () => ({
       added: ["src/templated.ts"],
-      modified: ["src/index.ts"], // Add index.ts so we make sure it is still ignored - due to a bug
+      modified: ["src/index.ts"], // Add index.ts so we make sure it is still ignored - see test-fixtures/template/templatesync.json ignores
       deleted: [],
     }));
     const mockCurrentRefDriver = jest
@@ -311,6 +311,12 @@ describe("templateSync", () => {
 
     // since there was no override for this file, no changes from the local file
     expect(result.localFileChanges).toEqual(expect.objectContaining({}));
+    expect(result.modifiedFiles).toEqual({
+      added: ["src/templated.ts"],
+      modified: ["templatesync.local.json"], // Add index.ts so we make sure it is still ignored - due to a bug
+      deleted: [],
+      total: 2,
+    });
 
     // Verify the files
     await fileMatchTemplate(tmpDir, "templatesync.json");
@@ -329,6 +335,73 @@ describe("templateSync", () => {
     ).toEqual({
       ...mockLocalConfig,
       afterRef: "newestSha",
+    });
+    expect(dummyCheckoutDriver).not.toHaveBeenCalled();
+  });
+  it("Does not update the local templatesync if updateAfterRef is true and the ref is the same", async () => {
+    // Remove the local sync overrides
+    await rm(join(tmpDir, "templatesync.local.json"));
+
+    const mockLocalConfig = {
+      afterRef: "dummySha",
+      ignore: [
+        // We don't have a need for this in here, but it's an example of keeping things cleaner for our custom plugins
+        "plugins/**",
+      ],
+    };
+
+    writeFileSync(
+      join(tmpDir, "templatesync.local.json"),
+      JSON.stringify(mockLocalConfig),
+    );
+
+    // We will only update the templated.ts
+    const mockDiffDriver = jest.fn().mockImplementation(async () => ({
+      added: ["src/templated.ts"],
+      modified: ["src/index.ts"], // Add index.ts so we make sure it is still ignored - see test-fixtures/template/templatesync.json ignores
+      deleted: [],
+    }));
+    const mockCurrentRefDriver = jest
+      .fn()
+      .mockImplementation(async () => "dummySha");
+    const result = await templateSync({
+      tmpCloneDir: "stubbed-by-driver",
+      cloneDriver: dummyCloneDriver,
+      repoUrl: "not-important",
+      repoDir: tmpDir,
+      updateAfterRef: true,
+      diffDriver: mockDiffDriver,
+      currentRefDriver: mockCurrentRefDriver,
+      checkoutDriver: dummyCheckoutDriver,
+    });
+
+    // Nothing shoudl be reported as changing
+    expect(result).toEqual({
+      localFileChanges: {},
+      localSkipFiles: [],
+      modifiedFiles: {
+        added: [],
+        modified: [],
+        deleted: [],
+        total: 0,
+      },
+    });
+    // Verify the files
+    await fileMatchDownstream(tmpDir, "templatesync.json");
+    await fileMatchDownstream(tmpDir, "src/templated.ts");
+
+    // Expect the none of the diff files to work
+    await fileMatchDownstream(tmpDir, "src/index.ts");
+    await fileMatchDownstream(tmpDir, "plugins/custom-plugin.js");
+    await fileMatchDownstream(tmpDir, "package.json");
+
+    // Ensure we have updated the local template field
+    expect(
+      JSON.parse(
+        (await readFile(join(tmpDir, "templatesync.local.json"))).toString(),
+      ),
+    ).toEqual({
+      ...mockLocalConfig,
     });
     expect(dummyCheckoutDriver).not.toHaveBeenCalled();
   });
@@ -356,6 +429,19 @@ describe("templateSync", () => {
 
     // since there was no override for this file, no changes from the local file
     expect(result.localFileChanges).toEqual(expect.objectContaining({}));
+    expect(result.modifiedFiles).toEqual({
+      added: [
+        "package.json",
+        "src/index.js",
+        "src/templated.js",
+        "src/templated.ts",
+        "templatesync.json",
+        "templatesync.local.json",
+      ],
+      deleted: [],
+      modified: [],
+      total: 6,
+    });
 
     // Verify the files
     await fileMatchTemplate(tmpDir, "templatesync.json");
