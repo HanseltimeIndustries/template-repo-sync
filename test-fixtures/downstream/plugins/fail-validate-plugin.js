@@ -9,6 +9,6 @@ module.exports = {
     );
   },
   validate: () => {
-    return [];
+    return ["oh no!", "not this one too!"];
   },
 };

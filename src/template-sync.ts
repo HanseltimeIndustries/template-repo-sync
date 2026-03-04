@@ -13,6 +13,7 @@ import { inferJSONIndent } from "./formatting";
 import * as commentJSON from "comment-json";
 import { TemplateCheckoutDriverFn, gitCheckout } from "./checkout-drivers";
 import { some } from "micromatch";
+import { loadPlugin } from "./load-plugin";
 
 export interface TemplateSyncOptions {
   /**
@@ -164,6 +165,53 @@ export async function templateSync(
       deleted: [],
       modified: [],
     };
+  }
+
+  // Pre-load plugins and make sure the sync file is respected
+  // Synchronous since grpc servers take a second
+  const localValidateErrors: {
+    [k: string]: string[];
+  } = {};
+  const validateErrors: {
+    [k: string]: string[];
+  } = {};
+  for (const config of localTemplateSyncConfig.merge ?? []) {
+    const plugin = await loadPlugin(config, options.repoDir);
+    const errors = plugin.validate(config.options ?? {});
+    if (errors && errors.length > 0) {
+      localValidateErrors[config.plugin] = errors;
+    }
+  }
+  for (const config of templateSyncConfig.merge ?? []) {
+    const plugin = await loadPlugin(config, tempCloneDir);
+    const errors = plugin.validate(config.options ?? {});
+    if (errors && errors.length > 0) {
+      validateErrors[config.plugin] = errors;
+    }
+  }
+
+  let errorStr = "";
+  if (Object.keys(validateErrors).length > 0) {
+    errorStr = `${errorStr}templatesync.json plugin option errors:\n`;
+    for (const plugin in validateErrors) {
+      errorStr = `${errorStr}\tPlugin (${plugin}):\n`;
+      validateErrors[plugin].forEach((err) => {
+        errorStr = `${errorStr}\t\t${err}\n`;
+      });
+    }
+  }
+  if (Object.keys(localValidateErrors).length > 0) {
+    errorStr = `${errorStr}templatesync.local.json plugin option errors:\n`;
+    for (const plugin in localValidateErrors) {
+      errorStr = `${errorStr}\tPlugin (${plugin}):\n`;
+      localValidateErrors[plugin].forEach((err) => {
+        errorStr = `${errorStr}\t\t${err}\n`;
+      });
+    }
+  }
+
+  if (errorStr !== "") {
+    throw Error(errorStr);
   }
 
   // Apply ignore filters

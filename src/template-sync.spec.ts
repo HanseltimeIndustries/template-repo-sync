@@ -5,30 +5,120 @@ import { tempDir, TEST_FIXTURES_DIR } from "./test-utils";
 import { join, resolve } from "path";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 
-// Just return the test-fixture directory
-const dummyCloneDriver = async () => {
-  return {
-    dir: resolve(TEST_FIXTURES_DIR, "template"),
-    remoteName: "ourRemote",
-  };
-};
-
 const dummyCheckoutDriver = jest.fn();
+const dummyCurrentRefDriver = jest.fn();
 
 const downstreamDir = resolve(TEST_FIXTURES_DIR, "downstream");
 
 describe("templateSync", () => {
   let tmpDir: string;
+  let templateDir: string;
+  let dummyCloneDriver: () => Promise<{ dir: string; remoteName: string }>;
   beforeEach(async () => {
     jest.resetAllMocks();
     tmpDir = await mkdtemp(tempDir());
+    templateDir = await mkdtemp(tempDir());
+    await copy(resolve(TEST_FIXTURES_DIR, "template"), templateDir);
     await copy(downstreamDir, tmpDir);
+    dummyCloneDriver = async () => {
+      return {
+        dir: templateDir,
+        remoteName: "ourRemote",
+      };
+    };
   });
   afterEach(async () => {
     await rm(tmpDir, {
       force: true,
       recursive: true,
     });
+  });
+  // Note: for this test, we expect actions and users to handle misconfigured template syncs
+  it.each([
+    [
+      "local",
+      `templatesync.local.json plugin option errors:
+\tPlugin (plugins/fail-validate-plugin.js):
+\t\toh no!
+\t\tnot this one too!
+`,
+    ],
+    [
+      "template",
+      `templatesync.json plugin option errors:
+\tPlugin (dummy-fail-plugin.js):
+\t\tshucks
+\t\tno good
+`,
+    ],
+    [
+      "both",
+      `templatesync.json plugin option errors:
+\tPlugin (dummy-fail-plugin.js):
+\t\tshucks
+\t\tno good
+templatesync.local.json plugin option errors:
+\tPlugin (plugins/fail-validate-plugin.js):
+\t\toh no!
+\t\tnot this one too!
+`,
+    ],
+  ])("throws errors from plugin validation", async (mode, expected) => {
+    // Remove the local sync overrides
+    await rm(join(tmpDir, "templatesync.local.json"));
+
+    if (mode === "local" || mode == "both") {
+      writeFileSync(
+        join(tmpDir, "templatesync.local.json"),
+        JSON.stringify({
+          ignore: [
+            // Ignores the templated.ts
+            "**/*.ts",
+            // We don't have a need for this in here, but it's an example of keeping things cleaner for our custom plugins
+            "plugins/**",
+          ],
+          merge: [
+            {
+              glob: "package.json",
+              plugin: "plugins/fail-validate-plugin.js",
+              options: {},
+            },
+          ],
+        }),
+      );
+    }
+    if (mode === "template" || mode === "both") {
+      writeFileSync(
+        join(templateDir, "templatesync.json"),
+        JSON.stringify({
+          ignore: [
+            // Ignores the templated.ts
+            "**/*.ts",
+            // We don't have a need for this in here, but it's an example of keeping things cleaner for our custom plugins
+            "plugins/**",
+          ],
+          merge: [
+            {
+              glob: "package.json",
+              plugin: "dummy-fail-plugin.js",
+              options: {},
+            },
+          ],
+        }),
+      );
+    }
+
+    await expect(
+      async () =>
+        await templateSync({
+          tmpCloneDir: "stubbed-by-driver",
+          cloneDriver: dummyCloneDriver,
+          repoUrl: "not-important",
+          repoDir: tmpDir,
+          checkoutDriver: dummyCheckoutDriver,
+          currentRefDriver: dummyCurrentRefDriver,
+        }),
+    ).rejects.toThrow(expected);
   });
   it("appropriately merges according to just the templatesync config file into an empty dir", async () => {
     const emptyTmpDir = await mkdtemp(tempDir());
@@ -39,6 +129,7 @@ describe("templateSync", () => {
         repoUrl: "not-important",
         repoDir: emptyTmpDir,
         checkoutDriver: dummyCheckoutDriver,
+        currentRefDriver: dummyCurrentRefDriver,
       }),
     ).toEqual({
       // Expect no changes since there was no local sync file
@@ -79,6 +170,7 @@ describe("templateSync", () => {
         repoDir: emptyTmpDir,
         branch: "new-template-test",
         checkoutDriver: dummyCheckoutDriver,
+        currentRefDriver: dummyCurrentRefDriver,
       }),
     ).toEqual({
       // Expect no changes since there was no local sync file
@@ -123,6 +215,7 @@ describe("templateSync", () => {
       repoUrl: "not-important",
       repoDir: tmpDir,
       checkoutDriver: dummyCheckoutDriver,
+      currentRefDriver: dummyCurrentRefDriver,
     });
 
     expect(result.localSkipFiles).toEqual([]);
@@ -190,6 +283,7 @@ describe("templateSync", () => {
       repoUrl: "not-important",
       repoDir: tmpDir,
       checkoutDriver: dummyCheckoutDriver,
+      currentRefDriver: dummyCurrentRefDriver,
     });
 
     expect(result.localSkipFiles).toEqual(["src/templated.ts"]);
@@ -256,6 +350,7 @@ describe("templateSync", () => {
       repoUrl: "not-important",
       repoDir: tmpDir,
       diffDriver: mockDiffDriver,
+      currentRefDriver: dummyCurrentRefDriver,
       checkoutDriver: dummyCheckoutDriver,
     });
 
@@ -484,26 +579,24 @@ describe("templateSync", () => {
       afterRef: "newestSha",
     });
   });
-  expect(dummyCheckoutDriver).not.toHaveBeenCalled();
+  // helper
+  async function fileMatchTemplate(tmpDir: string, relPath: string) {
+    return fileMatch(tmpDir, relPath, "template");
+  }
+
+  async function fileMatchDownstream(tmpDir: string, relPath: string) {
+    return fileMatch(tmpDir, relPath, "downstream");
+  }
+
+  async function fileMatch(
+    tmpDir: string,
+    relPath: string,
+    source: "downstream" | "template",
+  ) {
+    const dir =
+      source === "downstream" ? downstreamDir : (await dummyCloneDriver()).dir;
+    expect((await readFile(resolve(tmpDir, relPath))).toString()).toEqual(
+      (await readFile(resolve(dir, relPath))).toString(),
+    );
+  }
 });
-
-// helper
-async function fileMatchTemplate(tmpDir: string, relPath: string) {
-  return fileMatch(tmpDir, relPath, "template");
-}
-
-async function fileMatchDownstream(tmpDir: string, relPath: string) {
-  return fileMatch(tmpDir, relPath, "downstream");
-}
-
-async function fileMatch(
-  tmpDir: string,
-  relPath: string,
-  source: "downstream" | "template",
-) {
-  const dir =
-    source === "downstream" ? downstreamDir : (await dummyCloneDriver()).dir;
-  expect((await readFile(resolve(tmpDir, relPath))).toString()).toEqual(
-    (await readFile(resolve(dir, relPath))).toString(),
-  );
-}
