@@ -1,5 +1,5 @@
 {
-  "ignore": ["src/!(templated).ts", "custom-bin/**"],
+  "ignore": ["src/!(templated).ts", "custom-bin/**", "dummy-fail-plugin.js"],
   "merge": [
     {
       "glob": "package.json",
