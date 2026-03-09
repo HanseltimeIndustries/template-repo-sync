@@ -2,19 +2,28 @@
 	"name": "@hanseltime/template-repo-sync",
 	"version": "2.3.0",
 	"description": "An npm library that enables pluggable, customizable synchronization between template repos",
-	"main": "lib/cjs/index.js",
-	"types": "lib/cjs/index.d.ts",
-	"module": "lib/esm/index.js",
+	"types": "./dist/types/index.d.ts",
+	"main": "./dist/cjs/index.js",
+	"exports": {
+		"types": "./dist/types/index.d.ts",
+		"require": "./dist/cjs/index.js",
+		"import": "./dist/esm/index.mjs",
+		"default": "./dist/esm/index.mjs"
+	},
+	"files": [
+		"dist"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/HanseltimeIndustries/template-repo-sync.git"
 	},
 	"scripts": {
-		"format": "prettier . --write",
-		"lint": "eslint .",
 		"test": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --experimental-vm-modules\" jest",
-		"run-script": "node --loader ts-node/esm",
-		"build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json"
+		"build:esm": "tswc -- src -d dist/esm --config-file .esm.swcrc --strip-leading-paths --out-file-extension mjs",
+		"build:cjs": "tswc -- src -d dist/cjs --config-file .cjs.swcrc --strip-leading-paths",
+		"build:bin": "node ./bin-build.js",
+		"build:types": "tsc",
+		"build": "yarn build:types && yarn build:esm && yarn build:cjs && yarn build:bin"
 	},
 	"keywords": [],
 	"author": "",
@@ -28,6 +37,10 @@
 		"micromatch": "^4.0.5"
 	},
 	"devDependencies": {
+		"@babel/plugin-transform-modules-commonjs": "^7.28.6",
+		"@hanseltime/swc-plugin-node-globals-inject": "^1.0.0",
+		"@swc/cli": "^0.8.0",
+		"@swc/core": "^1.15.18",
 		"@types/diff": "^5.0.9",
 		"@types/fs-extra": "^11.0.4",
 		"@types/jest": "^29.5.11",
@@ -38,7 +51,9 @@
 		"colors": "^1.4.0",
 		"eslint": "^8.57.0",
 		"jest": "^29.7.0",
+		"jest-chain-transform": "^0.0.8",
 		"ts-jest": "^29.1.2",
+		"tswc": "^1.5.1",
 		"typescript": "^5.3.3"
 	},
 	"engines": {

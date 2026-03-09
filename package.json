@@ -24,6 +24,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.4",
 		"@changesets/cli": "^2.29.4",
+		"@hanseltime/esm-interop-tools": "^1.0.4",
 		"@types/node": "^20.11.7",
 		"colors": "^1.4.0",
 		"husky": "^9.0.11",

@@ -30,3 +30,5 @@ site/
 /tmp/
 
 .env
+
+.DS_Store
