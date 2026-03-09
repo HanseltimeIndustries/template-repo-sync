@@ -7,6 +7,9 @@ on:
       - main
       - alpha
 
+env:
+ BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+
 jobs:
   call-test-workflow:
     uses: ./.github/workflows/test-flow.yaml
@@ -32,16 +35,65 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache: 'yarn'
+          cache-dependency-path: yarn.lock
+      - name: Enable yarn Berry
+        run: corepack enable
       - name: Install
-        run: npm ci
-      - name: Build
-        run: npm run build
-      - name: Release
-        run: npm run release
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-      - name: Test Run
         run: |
-          npm publish --access public
+          yarn install --immutable
+      - name: Build
+        run: yarn build
+      - name: Apply Changesets
+        run: |
+          ./bin/ci-version.sh
+      # This is a workaround for yarn support issues
+      - name: Apply Publishing
+        run: |
+          git config user.name "release-bot"
+          git config user.email "release-bot@email"
+          yarn workspaces foreach --no-private --since npm publish --access public
+          yarn changeset tag
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create Publish Commit
+        run: |
+          diffs=$(git diff --name-only | wc -l)
+          if [ "$diffs" != "0" ]; then
+            git add .
+            git commit -m "chore: release packages [skip ci]"
+            git push --follow-tags
+          fi
+      # Note - we publish doc on non-release steps as well (i.e. a docs: commit)
+      # So we need the last tagged version and to make sure we are on the latest commit (to avoid re-runs on old actions)
+      # TODO - if we want to set up monorepo ghpages, we will add this
+      # - name: Should Publish Doc Check
+      #   id: publish-doc-check
+      #   shell: bash
+      #   run: |
+      #     # First ensure that we are still up-to-date 
+      #     # (do not allow reruns on old commits to override doc)
+      #     up_to_date=$(git status | grep "branch is up to date" || echo "false")
+
+      #     if [ "$up_to_date" ==  "false" ]; then
+      #         echo "Branch is not up to date and therefore will not publish documentation!"
+      #         exit
+      #     fi
+      #     # Get the last release tag on this branch (since we only publish doc with a successful publish)
+      #     # Note - the semantic-release step will have tagged if it performed a release
+      #     git fetch --tags
+      #     last_version=$(git describe --tags --abbrev=0 || false)
+
+      #     if [ "$last_version" == "false" ]; then
+      #       echo "No published version detected on branch.  Skipping publishing documentation!"
+      #       exit
+      #     fi
+
+      #     echo "version=${last_version}" >> "$GITHUB_OUTPUT"
+      # - name: Publish documentation
+      #   if: ${{ steps.publish-doc-check.outputs.version }}
+      #   run: |
+      #     pip install -r docs/requirements.txt
+      #     git config user.name docs-bot
+      #     git config user.email docs-bot@hanseltime.com
+      #     ./bin/publish-docs.sh "${{ steps.publish-doc-check.outputs.version }}"
