@@ -23,5 +23,5 @@
 		"isolatedModules": true,
 		"types": ["node", "jest"]
 	},
-	"exclude": ["node_modules/**/*", "test-fixtures/**/*", "lib/**/*"]
+	"exclude": ["node_modules/**/*", "test-fixtures/**/*", "dist/**/*"]
 }
