@@ -57,7 +57,7 @@ module.exports = {
 	transformIgnorePatterns: [
 		// Populated by your yarn afterInstall command to scan esm modules
 		getJestNodeModulesTransformIgnore({
-			file: path.join(__dirname, '..', '..', '..', 'esm-packages.json'),
+			file: path.join(__dirname, "..", "..", "..", "esm-packages.json"),
 		}),
 	],
 };
