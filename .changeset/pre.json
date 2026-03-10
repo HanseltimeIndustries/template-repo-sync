@@ -1,0 +1,8 @@
+{
+	"mode": "pre",
+	"tag": "alpha",
+	"initialVersions": {
+		"@hanseltime/template-repo-sync": "2.3.0"
+	},
+	"changesets": ["great-spoons-pull", "tasty-suits-end"]
+}
