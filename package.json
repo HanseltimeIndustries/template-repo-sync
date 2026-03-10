@@ -1,62 +1,40 @@
 {
-  "name": "@hanseltime/template-repo-sync",
-  "version": "2.3.0",
-  "description": "An npm library that enables pluggable, customizable synchronization between template repos",
-  "main": "lib/cjs/index.js",
-  "types": "lib/cjs/index.d.ts",
-  "module": "lib/esm/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/HanseltimeIndustries/template-repo-sync.git"
-  },
-  "scripts": {
-    "format": "prettier . --write",
-    "lint": "eslint .",
-    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
-    "run-script": "node --loader ts-node/esm",
-    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
-    "prepare": "husky",
-    "release": "semantic-release"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "comment-json": "^4.2.3",
-    "diff": "^5.1.0",
-    "fs-extra": "^11.2.0",
-    "jsonpath": "^1.1.1",
-    "lodash.merge": "^4.6.2",
-    "micromatch": "^4.0.5"
-  },
-  "devDependencies": {
-    "@commitlint/config-angular": "^19.0.3",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/exec": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@types/diff": "^5.0.9",
-    "@types/fs-extra": "^11.0.4",
-    "@types/jest": "^29.5.11",
-    "@types/jsonpath": "^0.2.4",
-    "@types/lodash.merge": "^4.6.9",
-    "@types/micromatch": "^4.0.6",
-    "@types/node": "^20.11.7",
-    "colors": "^1.4.0",
-    "commitlint": "^19.0.3",
-    "eslint": "^8.57.0",
-    "husky": "^9.0.11",
-    "jest": "^29.7.0",
-    "prettier": "3.2.5",
-    "semantic-release": "^23.0.2",
-    "ts-jest": "^29.1.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^7.1.0"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "template-repo-sync-monorepo",
+	"version": "2.3.0",
+	"description": "An npm library that enables pluggable, customizable synchronization between template repos",
+	"main": "lib/cjs/index.js",
+	"types": "lib/cjs/index.d.ts",
+	"module": "lib/esm/index.js",
+	"workspaces": [
+		"packages/@hanseltime/*"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/HanseltimeIndustries/template-repo-sync.git"
+	},
+	"scripts": {
+		"check": "biome check",
+		"build": "yarn workspaces foreach -At run build",
+		"typedoc": "yarn workspaces foreach -At run typedoc",
+		"test": "yarn workspaces foreach -At run test"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.4",
+		"@changesets/cli": "^2.29.4",
+		"@hanseltime/esm-interop-tools": "^1.0.4",
+		"@types/node": "^20.11.7",
+		"colors": "^1.4.0",
+		"husky": "^9.0.11",
+		"jest": "^29.7.0",
+		"ts-jest": "^29.1.2",
+		"typescript": "^5.3.3"
+	},
+	"packageManager": "yarn@4.7.0",
+	"engines": {
+		"node": ">=20"
+	},
+	"private": true
 }
