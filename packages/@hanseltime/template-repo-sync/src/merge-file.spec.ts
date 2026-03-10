@@ -1,0 +1,507 @@
+import { existsSync } from "fs";
+import { mkdtemp, readFile, rm } from "fs/promises";
+import { copySync } from "fs-extra";
+import { join, resolve } from "path";
+import { mergeFile } from "./merge-file";
+import { TEST_FIXTURES_DIR, tempDir } from "./test-utils";
+import type { FileOperation, JsonFileMergeOptions } from "./types";
+
+const testTemplateDir = resolve(TEST_FIXTURES_DIR, "template");
+const testDownstreamDir = resolve(TEST_FIXTURES_DIR, "downstream");
+
+describe("mergeFile", () => {
+	let tmpDir: string;
+	let tmpTemplateDir: string;
+	beforeEach(async () => {
+		tmpDir = await mkdtemp(tempDir());
+		copySync(testDownstreamDir, tmpDir);
+		tmpTemplateDir = await mkdtemp(tempDir());
+		copySync(testTemplateDir, tmpTemplateDir);
+	});
+	afterEach(async () => {
+		await rm(tmpDir, {
+			force: true,
+			recursive: true,
+		});
+		await rm(tmpTemplateDir, {
+			force: true,
+			recursive: true,
+		});
+	});
+	// Note: we use the "ignore" from the templateSync to constrain files we iterate over so it doeesn't happen here
+	// it('skips the file if it is part of template config ignroe', async () => {
+	//     expect(await mergeFile('package.json', {
+	//         cwd: tmpDir,
+	//         tempCloneDir: testTemplateDir,
+	//         localTemplateSyncConfig: {
+	//             ignore: [],
+	//             merge: {
+	//             }
+	//         },
+	//         templateSyncConfig: {
+	//             ignore: ['**/package.json'],
+	//         }
+	//     })).toBe(false)
+	// })
+	it.each([
+		["added"],
+		["deleted"],
+		["modified"],
+	])("skips the [%s] file if it is part of local config ignore", async (op) => {
+		expect(
+			await mergeFile("package.json", {
+				cwd: tmpDir,
+				tempCloneDir: tmpTemplateDir,
+				localTemplateSyncConfig: {
+					ignore: ["**/package.json"],
+					merge: [],
+				},
+				templateSyncConfig: {
+					ignore: ["**/*.txt"],
+				},
+				fileOperation: op as FileOperation,
+			}),
+		).toEqual({
+			ignoredDueToLocal: true,
+		});
+	});
+	it.each([
+		["added"],
+		["modified"],
+	])("overwrites if no merge config for [%s] files", async (op) => {
+		expect(
+			await mergeFile("package.json", {
+				cwd: tmpDir,
+				tempCloneDir: tmpTemplateDir,
+				localTemplateSyncConfig: {
+					ignore: [],
+				},
+				templateSyncConfig: {
+					ignore: ["**/*.txt"],
+				},
+				fileOperation: op as FileOperation,
+			}),
+		).toEqual({
+			ignoredDueToLocal: false,
+			localChanges: [],
+		});
+
+		// Ensure we overwrote
+		expect(await readFile(join(tmpDir, "package.json"))).toEqual(
+			await readFile(join(tmpTemplateDir, "package.json")),
+		);
+	});
+	it("removes the template deleted files", async () => {
+		expect(
+			await mergeFile("package.json", {
+				cwd: tmpDir,
+				tempCloneDir: tmpTemplateDir,
+				localTemplateSyncConfig: {
+					ignore: [],
+				},
+				templateSyncConfig: {
+					ignore: ["**/*.txt"],
+				},
+				fileOperation: "deleted", // This is normally inferred by the top-level code
+			}),
+		).toEqual({
+			ignoredDueToLocal: false,
+			localChanges: [],
+		});
+
+		// Ensure we overwrote
+		expect(existsSync(join(tmpDir, "package.json"))).toBeFalsy();
+	});
+
+	// TODO - this could change if there's a use case
+	it("does not apply plugins on deleted", async () => {
+		expect(
+			await mergeFile("package.json", {
+				cwd: tmpDir,
+				tempCloneDir: tmpTemplateDir,
+				localTemplateSyncConfig: {
+					ignore: [],
+					merge: [
+						{
+							plugin: "_json",
+							glob: "**/package.json",
+							options: {
+								paths: [
+									// Do not touch huh
+									["$.dependencies.huh", "merge-current"],
+								],
+							},
+						},
+					],
+				},
+				templateSyncConfig: {
+					ignore: ["**/*.txt"],
+					merge: [
+						{
+							glob: "**/package.json",
+							plugin: "_json",
+							options: {
+								missingIsDelete: true,
+								paths: [
+									// Merge all template dependencies
+									["$.dependencies", "merge-template"],
+								],
+							} as JsonFileMergeOptions,
+						},
+					],
+				},
+				fileOperation: "deleted", // This is normally inferred by the top-level code
+			}),
+		).toEqual({
+			ignoredDueToLocal: false,
+			localChanges: [],
+		});
+
+		// Ensure we overwrote
+		expect(existsSync(join(tmpDir, "package.json"))).toBeFalsy();
+	});
+
+	describe.each([
+		["added" as FileOperation],
+		["modified" as FileOperation],
+	])("[%s] file", (op: FileOperation) => {
+		// Yea... these are more integration tests but I'm kinda untrusting of mocks for this
+		it("applies default [.json] merge with first rules if merge applies to file", async () => {
+			expect(
+				await mergeFile("package.json", {
+					cwd: tmpDir,
+					tempCloneDir: testTemplateDir,
+					localTemplateSyncConfig: {
+						ignore: [],
+					},
+					fileOperation: op,
+					templateSyncConfig: {
+						ignore: ["**/*.txt"],
+						merge: [
+							{
+								glob: "**/package.json",
+								options: "merge-current",
+								plugin: "_json",
+							},
+							{
+								glob: "**/package.json",
+								options: "merge-template",
+								plugin: "_json",
+							},
+						],
+					},
+				}),
+			).toEqual({
+				ignoredDueToLocal: false,
+				localChanges: [],
+			});
+
+			// Ensure we overwrote
+			expect(
+				JSON.parse((await readFile(join(tmpDir, "package.json"))).toString()),
+			).toEqual({
+				name: "mypkg",
+				description: "my description",
+				dependencies: {
+					mypackage: "^1.2.0",
+					newpacakge: "^22.2.2",
+					package2: "3.22.1",
+					huh: "^2.30.0",
+				},
+				engines: {
+					node: ">=20",
+				},
+				scripts: {
+					build: "build",
+					test: "jest",
+					myscript: "somescript",
+				},
+				version: "new-version",
+			});
+		});
+		it("[inverse] applies default [.json] merge with first rules if merge applies to file", async () => {
+			expect(
+				await mergeFile("package.json", {
+					cwd: tmpDir,
+					tempCloneDir: testTemplateDir,
+					localTemplateSyncConfig: {
+						ignore: [],
+					},
+					fileOperation: op,
+					templateSyncConfig: {
+						ignore: ["**/*.txt"],
+						merge: [
+							{
+								glob: "**/package.json",
+								options: "merge-template",
+								plugin: "_json",
+							},
+							{
+								glob: "**/package.json",
+								options: "merge-current",
+								plugin: "_json",
+							},
+						],
+					},
+				}),
+			).toEqual({
+				ignoredDueToLocal: false,
+				localChanges: [],
+			});
+
+			// Ensure we overwrote
+			expect(
+				JSON.parse((await readFile(join(tmpDir, "package.json"))).toString()),
+			).toEqual({
+				name: "some-stub-name",
+				description: "some-stub-description",
+				dependencies: {
+					mypackage: "^1.2.0",
+					newpacakge: "^22.2.2",
+					package2: "3.22.1",
+					huh: "~1.0.0",
+				},
+				engines: {
+					node: ">=15",
+				},
+				scripts: {
+					build: "build",
+					test: "fill this in yourself",
+					myscript: "somescript",
+				},
+				version: "new-version",
+			});
+		});
+		it("[inverse] applies default [.json] merge with sync and then local override", async () => {
+			expect(
+				await mergeFile("package.json", {
+					cwd: tmpDir,
+					tempCloneDir: testTemplateDir,
+					fileOperation: op,
+					localTemplateSyncConfig: {
+						ignore: [],
+						merge: [
+							{
+								plugin: "_json",
+								glob: "**/package.json",
+								options: {
+									paths: [
+										// Do not touch huh
+										["$.dependencies.huh", "merge-current"],
+									],
+								},
+							},
+						],
+					},
+					templateSyncConfig: {
+						ignore: ["**/*.txt"],
+						merge: [
+							{
+								glob: "**/package.json",
+								plugin: "_json",
+								options: {
+									missingIsDelete: true,
+									paths: [
+										// Merge all template dependencies
+										["$.dependencies", "merge-template"],
+									],
+								} as JsonFileMergeOptions,
+							},
+						],
+					},
+				}),
+			).toEqual({
+				ignoredDueToLocal: false,
+				localChanges: expect.arrayContaining([
+					{
+						added: undefined,
+						count: 1,
+						removed: true,
+						value: '\t\t"huh": "~1.0.0"\n',
+					},
+					{
+						added: true,
+						count: 1,
+						removed: undefined,
+						value: '\t\t"huh": "^2.30.0"\n',
+					},
+				]),
+			});
+
+			// Ensure we overwrote
+			expect(
+				JSON.parse((await readFile(join(tmpDir, "package.json"))).toString()),
+			).toEqual({
+				name: "mypkg",
+				description: "my description",
+				dependencies: {
+					mypackage: "^1.2.0",
+					newpacakge: "^22.2.2",
+					package2: "3.22.1",
+					huh: "^2.30.0",
+				},
+				engines: {
+					node: ">=20",
+				},
+				scripts: {
+					build: "build",
+					test: "jest",
+					myscript: "somescript",
+				},
+				version: "new-version",
+			});
+		});
+		it("[inverse] applies default [.json] and custom merge for local with sync and then local override", async () => {
+			expect(
+				await mergeFile("package.json", {
+					cwd: tmpDir,
+					tempCloneDir: testTemplateDir,
+					fileOperation: op,
+					localTemplateSyncConfig: {
+						ignore: [],
+						merge: [
+							{
+								plugin: "../test-fixtures/dummy-plugin.js",
+								options: {
+									paths: [
+										// Do not touch huh
+										["$.dependencies.huh", "merge-current"],
+									],
+								},
+								glob: "**/package.json",
+							},
+						],
+					},
+					templateSyncConfig: {
+						ignore: ["**/*.txt"],
+						merge: [
+							{
+								plugin: "_json",
+								glob: "**/package.json",
+								options: {
+									missingIsDelete: true,
+									paths: [
+										// Merge all template dependencies
+										["$.dependencies", "merge-template"],
+									],
+								} as JsonFileMergeOptions,
+							},
+						],
+					},
+				}),
+			).toEqual({
+				ignoredDueToLocal: false,
+				// TODO: I don't
+				localChanges: expect.arrayContaining([
+					{
+						added: undefined,
+						count: 17,
+						removed: true,
+						value: `\t"name": "mypkg",
+\t"description": "my description",
+\t"dependencies": {
+\t\t"mypackage": "^1.2.0",
+\t\t"newpacakge": "^22.2.2",
+\t\t"package2": "3.22.1",
+\t\t"huh": "~1.0.0"
+\t},
+\t"engines": {
+\t\t"node": ">=20"
+\t},
+\t"scripts": {
+\t\t"build": "build",
+\t\t"test": "jest",
+\t\t"myscript": "somescript"
+\t},
+\t"version": "new-version"\n`,
+					},
+					{
+						added: true,
+						count: 1,
+						removed: undefined,
+						value: `    "tested": true\n`,
+					},
+				]),
+			});
+
+			// Ensure we overwrote
+			expect(
+				JSON.parse((await readFile(join(tmpDir, "package.json"))).toString()),
+			).toEqual({
+				tested: true,
+			});
+		});
+		it("[inverse] applies builtin _json and custom merge for local with sync plugin and then local override", async () => {
+			expect(
+				await mergeFile("package.json", {
+					cwd: tmpDir,
+					tempCloneDir: testTemplateDir,
+					fileOperation: op,
+					localTemplateSyncConfig: {
+						ignore: [],
+						merge: [
+							{
+								glob: "**/package.json",
+								plugin: "plugins/custom-plugin.js",
+								options: {
+									paths: [
+										// Do not touch huh
+										["$.dependencies.huh", "merge-current"],
+									],
+								},
+							},
+						],
+					},
+					templateSyncConfig: {
+						ignore: ["**/*.txt"],
+						merge: [
+							{
+								glob: "**/package.json",
+								// TODO - we need to handle the weird implicit case I added here.  It's dumb
+								options: {
+									missingIsDelete: true,
+									paths: [
+										// Merge all template dependencies
+										["$.dependencies", "merge-template"],
+									],
+								} as JsonFileMergeOptions,
+								plugin: "_json",
+							},
+						],
+						//   ".json": {
+						//     // no plugins
+						//     rules: [
+						//       {
+						//         glob: "**/package.json",
+						//         options: {
+						//           missingIsDelete: true,
+						//           paths: [
+						//             // Merge all template dependencies
+						//             ["$.dependencies", "merge-template"],
+						//           ],
+						//         } as JsonFileMergeOptions,
+						//       },
+						//       {
+						//         glob: "**/package.json",
+						//         options: "merge-current",
+						//       },
+						//     ],
+						//   },
+						// },
+					},
+				}),
+			).toEqual({
+				ignoredDueToLocal: false,
+				// We are just making sure plugin look up happens here
+				localChanges: expect.arrayContaining([]),
+			});
+
+			// Ensure we overwrote
+			expect(
+				JSON.parse((await readFile(join(tmpDir, "package.json"))).toString()),
+			).toEqual({
+				downstream: true,
+			});
+		});
+	});
+});

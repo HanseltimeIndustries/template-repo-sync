@@ -1,0 +1,155 @@
+import type { Change } from "diff";
+import { diffLines } from "diff";
+import { existsSync } from "fs";
+import { readFile, rm } from "fs/promises";
+import { outputFile } from "fs-extra";
+import { isMatch, some } from "micromatch";
+import { extname, join } from "path";
+import { loadPlugin } from "./load-plugin";
+import type { Config, FileOperation, MergeContext, MergePlugin } from "./types";
+
+interface MergeFileOptions {
+	localTemplateSyncConfig: Config;
+	templateSyncConfig: Config;
+	tempCloneDir: string;
+	cwd: string;
+	fileOperation: FileOperation;
+}
+
+interface MergeFileReturn {
+	/**
+	 * If the file was ignored due to the local config
+	 */
+	ignoredDueToLocal: boolean;
+	/**
+	 * Only available if the file wasn't ignored, this is a list of lineDiffs
+	 * from the diff library that were applied to what would've been changed by
+	 * the base templatesync repo
+	 */
+	localChanges?: Change[];
+}
+
+/**
+ * Applies the merge to a file according to the context information.
+ *
+ * Returns true if merged and false if skipped
+ * @param relPath
+ * @param context
+ * @returns
+ */
+export async function mergeFile(
+	relPath: string,
+	context: MergeFileOptions,
+): Promise<MergeFileReturn> {
+	const { localTemplateSyncConfig, templateSyncConfig, tempCloneDir, cwd } =
+		context;
+
+	if (some(relPath, localTemplateSyncConfig.ignore)) {
+		return {
+			ignoredDueToLocal: true,
+		};
+	}
+
+	const ext = extname(relPath);
+	const filePath = join(cwd, relPath);
+	const templatePath = join(tempCloneDir, relPath);
+
+	// Unless there's a need, we remove files that were deleted and don't pass them to plugins yet
+	if (context.fileOperation === "deleted") {
+		if (existsSync(filePath)) {
+			await rm(filePath);
+		}
+		return {
+			ignoredDueToLocal: false,
+			localChanges: [],
+		};
+	}
+
+	const mergeConfig = templateSyncConfig.merge?.find((mc) =>
+		isMatch(relPath, mc.glob),
+	);
+	const localMergeConfig = localTemplateSyncConfig.merge?.find((mc) =>
+		isMatch(relPath, mc.glob),
+	);
+
+	const mergeHandler = mergeConfig
+		? await loadPlugin(mergeConfig, tempCloneDir)
+		: undefined;
+	const localMergeHandler = localMergeConfig
+		? await loadPlugin(localMergeConfig, cwd)
+		: undefined;
+
+	// Either write the merge or write the file
+	let fileContents: string;
+	const localChanges: Change[] = [];
+	if (existsSync(filePath) && (mergeHandler || localMergeHandler)) {
+		const originalCurrentFile = (await readFile(filePath)).toString();
+		if (mergeHandler) {
+			fileContents = await safeMerge(
+				mergeHandler,
+				mergeConfig?.plugin ?? `default for ${ext}`,
+				originalCurrentFile,
+				(await readFile(templatePath)).toString(),
+				{
+					relFilePath: relPath,
+					mergeArguments: mergeConfig?.options ?? {},
+					isLocalOptions: false,
+				},
+			);
+		} else {
+			// Apply overwrite if we didn't set up merge
+			fileContents = (await readFile(templatePath)).toString();
+		}
+
+		// We apply the localMerge Config to the fileContent output by the template merge
+		if (localMergeHandler) {
+			const localContents = await safeMerge(
+				localMergeHandler,
+				localMergeConfig?.plugin ?? `default for ${ext}`,
+				originalCurrentFile,
+				fileContents,
+				{
+					relFilePath: relPath,
+					mergeArguments: localMergeConfig?.options ?? {},
+					isLocalOptions: true,
+				},
+			);
+			localChanges.push(...diffLines(fileContents, localContents));
+			fileContents = localContents;
+		}
+	} else {
+		// Just perform simple overwrite
+		fileContents = (await readFile(templatePath)).toString();
+	}
+	await outputFile(filePath, fileContents);
+	return {
+		ignoredDueToLocal: false,
+		localChanges,
+	};
+}
+
+/**
+ * Simple helper function to ensure that we don't let bad plugins corrupt the call flow
+ * @param plugin
+ */
+async function safeMerge(
+	plugin: MergePlugin<unknown>,
+	pluginPath: string,
+	current: string,
+	fromTemplate: string,
+	context: MergeContext,
+) {
+	const ret = await plugin.merge(current, fromTemplate, context);
+	if (typeof ret !== "string") {
+		throw new Error(
+			`Plugin ${pluginPath} did not return string for merge function!  This is not allowed!`,
+		);
+	}
+
+	if (!ret) {
+		throw new Error(
+			`Plugin ${pluginPath} should not make a merge be an empty string!`,
+		);
+	}
+	return ret as string;
+}

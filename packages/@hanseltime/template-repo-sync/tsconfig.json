@@ -10,13 +10,18 @@
 		"lib": ["ESNext"],
 
 		"moduleResolution": "NodeNext",
-		"outDir": "lib/esm",
+		"outDir": "dist/types",
 		"rootDir": "src",
 		/* Type Checking */
 		"strict": true /* Enable all strict type-checking options. */,
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */,
-		"types": ["node", "jest"],
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		// IMPORTANT - SWC controls everything else for module building - so we only emit declarations here
+		"declaration": true,
+		"declarationMap": true,
+		"emitDeclarationOnly": true,
+		"isolatedModules": true,
+		"types": ["node", "jest"]
 	},
-	"exclude": ["node_modules/**/*", "test-fixtures/**/*", "lib/**/*"]
+	"exclude": ["node_modules/**/*", "test-fixtures/**/*", "dist/**/*"]
 }
