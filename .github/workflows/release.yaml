@@ -55,7 +55,8 @@ jobs:
         run: |
           git config user.name "release-bot"
           git config user.email "release-bot@email"
-          yarn workspaces foreach --no-private --since npm publish --access public
+          yarn workspaces foreach --no-private --since -- \
+            npm publish --access public --provenance
           yarn changeset tag
       - name: Create Publish Commit
         run: |
