@@ -11,8 +11,7 @@
 ##################################################################################
 
 
-if [ "$BRANCH_NAME" == "master" ]; then
-echo 'precommand=if [ -f .changeset/pre.json ]; then yarn changeset pre exit; fi' >> $GITHUB_OUTPUT
+if [ "$BRANCH_NAME" == "main" ]; then
     if [ -f .changeset/pre.json ]; then
         yarn changeset pre exit;
     fi
