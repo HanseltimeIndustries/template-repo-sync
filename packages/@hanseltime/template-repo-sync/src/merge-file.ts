@@ -1,7 +1,7 @@
 import type { Change } from "diff";
 import { diffLines } from "diff";
 import { existsSync } from "fs";
-import { readFile, rm } from "fs/promises";
+import { chmod, readFile, rm, stat } from "fs/promises";
 import { outputFile } from "fs-extra";
 import { isMatch, some } from "micromatch";
 import { extname, join } from "path";
@@ -122,6 +122,8 @@ export async function mergeFile(
 		fileContents = (await readFile(templatePath)).toString();
 	}
 	await outputFile(filePath, fileContents);
+	// Keep permission bits (e.g. executable scripts) in line with the template
+	await chmod(filePath, (await stat(templatePath)).mode & 0o777);
 	return {
 		ignoredDueToLocal: false,
 		localChanges,
