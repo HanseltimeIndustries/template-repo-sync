@@ -1,5 +1,16 @@
 # [2.3.0](https://github.com/HanseltimeIndustries/template-repo-sync/compare/v2.2.1...v2.3.0) (2026-03-04)
 
+## 2.4.0
+
+### Minor Changes
+
+- 75dd67f: Change build tooling to use swc for more robust commonjs/esm support
+
+### Patch Changes
+
+- dd64555: Switching lint and format tool to biome and monorepo build patterns
+- 18ebf92: Preserve template file permission bits (e.g. executable scripts) when syncing files
+
 ## 2.4.0-alpha.0
 
 ### Minor Changes
