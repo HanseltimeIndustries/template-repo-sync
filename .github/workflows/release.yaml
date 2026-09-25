@@ -55,10 +55,8 @@ jobs:
         run: |
           git config user.name "release-bot"
           git config user.email "release-bot@email"
-          yarn workspaces foreach --no-private --since npm publish --access public
+          yarn workspaces foreach --no-private --since npm publish --access public --provenance
           yarn changeset tag
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create Publish Commit
         run: |
           diffs=$(git diff --name-only | wc -l)
