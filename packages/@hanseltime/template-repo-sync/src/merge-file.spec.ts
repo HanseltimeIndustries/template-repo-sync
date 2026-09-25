@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import { mkdtemp, readFile, rm } from "fs/promises";
+import { chmod, mkdtemp, readFile, rm, stat } from "fs/promises";
 import { copySync } from "fs-extra";
 import { join, resolve } from "path";
 import { mergeFile } from "./merge-file";
@@ -90,6 +90,26 @@ describe("mergeFile", () => {
 		expect(await readFile(join(tmpDir, "package.json"))).toEqual(
 			await readFile(join(tmpTemplateDir, "package.json")),
 		);
+	});
+	it.each([
+		["added"],
+		["modified"],
+	])("applies the template file mode for [%s] files", async (op) => {
+		await chmod(join(tmpTemplateDir, "package.json"), 0o755);
+		await chmod(join(tmpDir, "package.json"), 0o644);
+		await mergeFile("package.json", {
+			cwd: tmpDir,
+			tempCloneDir: tmpTemplateDir,
+			localTemplateSyncConfig: {
+				ignore: [],
+			},
+			templateSyncConfig: {
+				ignore: ["**/*.txt"],
+			},
+			fileOperation: op as FileOperation,
+		});
+
+		expect((await stat(join(tmpDir, "package.json"))).mode & 0o777).toBe(0o755);
 	});
 	it("removes the template deleted files", async () => {
 		expect(
